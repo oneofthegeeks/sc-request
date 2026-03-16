@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SC Request Redesign — GoTo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Sidebar nav -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">GoTo</div>
+        <div class="sidebar-title">SC Request Redesign</div>
+      </div>
+      <ul class="nav-list" id="nav-list">
+        <li><a href="#problem" class="nav-link active">The Problem</a></li>
+        <li><a href="#solution" class="nav-link">Proposed Solution</a></li>
+        <li><a href="#flow" class="nav-link">Request Flow</a></li>
+        <li><a href="#calendar" class="nav-link">Calendar Integration</a></li>
+        <li><a href="#data-model" class="nav-link">Data Model</a></li>
+        <li><a href="#email" class="nav-link">Email Redesign</a></li>
+        <li><a href="#options" class="nav-link">Implementation Options</a></li>
+        <li><a href="#next-steps" class="nav-link">Next Steps</a></li>
+      </ul>
+    </nav>
+
+    <!-- Main content -->
+    <main class="content" id="content">
+
+      <!-- 1. The Problem -->
+      <section id="problem" class="section">
+        <div class="section-inner">
+          <span class="section-label">The Problem</span>
+          <h1>The SC Request Process Has Friction</h1>
+          <p class="lead">Today's process works — but it requires too many manual steps and disconnected tools that slow AEs down.</p>
+          <div class="cards">
+            <div class="card">
+              <div class="card-icon">📋</div>
+              <h3>Manual SC Selection</h3>
+              <p>AEs must pick from a full list of SCs every time. Their assigned SC is tracked in a spreadsheet outside of Salesforce.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">📅</div>
+              <h3>Disconnected Scheduling</h3>
+              <p>Scheduling with the customer and securing the SC's calendar are two separate steps with no coordination between them.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">📧</div>
+              <h3>Unhelpful Notifications</h3>
+              <p>The current email says "See Meeting Invite" instead of the actual time. No direct links to Salesforce records.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">📊</div>
+              <h3>No Reporting History</h3>
+              <p>SC requests are only tracked as Events. There's no structured record to report on SC utilization or request patterns.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Proposed Solution -->
+      <section id="solution" class="section">
+        <div class="section-inner">
+          <span class="section-label">Proposed Solution</span>
+          <h1>A Smarter SC Request — Without Leaving Salesforce</h1>
+          <p class="lead">The same "Request SC" button AEs already know. A completely redesigned experience behind it.</p>
+          <div class="cards">
+            <div class="card">
+              <div class="card-icon">🎯</div>
+              <h3>Auto-Assigned SC</h3>
+              <p>The AE's assigned SC is pre-populated automatically. Override available if needed. No more hunting through a full list.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">📆</div>
+              <h3>Live Calendar Availability</h3>
+              <p>See the next 5 open slots for both AE and SC in real time. Pick a time while on the phone with the customer.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">📨</div>
+              <h3>Instant Outlook Invite</h3>
+              <p>Optionally send a calendar invite to both AE and SC automatically on submit — no separate step required.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">📈</div>
+              <h3>Full Request History</h3>
+              <p>Every SC request is stored as a structured record on the Opportunity — reportable, searchable, always accessible.</p>
+            </div>
+          </div>
+          <div style="margin-top:40px;padding:24px;background:var(--blue-light);border-radius:var(--radius);border-left:4px solid var(--blue)">
+            <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:8px">Zero Retraining Required</p>
+            <p style="font-size:15px;color:var(--text)">The entry point stays exactly the same — "Request SC" in the Opportunity action bar. AEs don't need to learn anything new about where to find it.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Request Flow -->
+      <section id="flow" class="section">
+        <div class="section-inner">
+          <span class="section-label">Request Flow</span>
+          <h1>How It Works — Step by Step</h1>
+          <p class="lead">The AE completes the entire process in one modal. Everything else happens automatically.</p>
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <h3>AE clicks "Request SC" in the Opportunity action bar</h3>
+                <p>Same button, same location. A Lightning modal opens instantly — no page navigation required.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <h3>SC is auto-populated from the AE's assignment</h3>
+                <p>The system looks up the AE's assigned SC automatically. The AE can override and choose any SC from a dropdown if needed.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                <h3>Live calendar availability loads</h3>
+                <p>The next 5 open time slots for both the AE and SC appear instantly. The AE can also browse a specific date. Duration defaults to 1 hour.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-body">
+                <h3>AE selects request type, product line, and fills in details</h3>
+                <p>Dropdowns for Request Type (14 options) and Product Line (17 options). Freeform notes field for context, current state, and demo requirements.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">5</div>
+              <div class="step-body">
+                <h3>AE reviews and submits</h3>
+                <p>Optional checkbox: "Send Outlook calendar invite to SC automatically" — checked by default. One click to submit.</p>
+              </div>
+            </div>
+            <div class="step step-auto">
+              <div class="step-num">✓</div>
+              <div class="step-body">
+                <h3>Everything else happens automatically</h3>
+                <p>SC Request record created &nbsp;·&nbsp; Event logged on Opportunity &nbsp;·&nbsp; SC added to Opportunity Team &nbsp;·&nbsp; Opportunity fields updated &nbsp;·&nbsp; Email sent to AE, SC, and both managers &nbsp;·&nbsp; Outlook invite sent (if selected)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Calendar Integration -->
+      <section id="calendar" class="section">
+        <div class="section-inner">
+          <span class="section-label">Calendar Integration</span>
+          <h1>Schedule While You're on the Phone</h1>
+          <p class="lead">The AE sees real availability for both themselves and the SC — no back-and-forth, no separate scheduling step.</p>
+          <div class="cards">
+            <div class="card">
+              <div class="card-icon">⚡</div>
+              <h3>Next 5 Open Slots</h3>
+              <p>The system shows the next 5 times that work for both AE and SC automatically — no date hunting required.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">🗓️</div>
+              <h3>Date Picker</h3>
+              <p>If the AE has a specific date in mind from the customer conversation, they can select it and see all open times that day.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">⏱️</div>
+              <h3>Duration Options</h3>
+              <p>30 min, 1 hour, or 90 min. Defaults to 1 hour. Slots update instantly when duration changes.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">📬</div>
+              <h3>Optional Outlook Invite</h3>
+              <p>After picking a slot, the AE can choose to auto-send an Outlook calendar invite to the SC. Opt-out if already scheduled.</p>
+            </div>
+          </div>
+          <div style="margin-top:32px;padding:20px 24px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)">
+            <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px">If calendar is unavailable</p>
+            <p style="font-size:14px;color:var(--text);line-height:1.7">The form never blocks submission. If the Microsoft 365 API is unavailable or no slots are found, the AE can always enter a date and time manually and proceed.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Data Model -->
+      <section id="data-model" class="section">
+        <div class="section-inner">
+          <span class="section-label">Data Model</span>
+          <h1>What Changes in Salesforce</h1>
+          <p class="lead">Two new custom objects. A few new fields on the Opportunity. Everything else is standard Salesforce.</p>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Object</th>
+                <th>Status</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>SC_Request__c</code></td>
+                <td><span class="new">New</span></td>
+                <td>Stores every SC request for reporting, history display on the Opportunity, and audit trail</td>
+              </tr>
+              <tr>
+                <td><code>SC_Pairing__c</code></td>
+                <td><span class="new">New</span></td>
+                <td>AE→SC assignment data — replaces the external spreadsheet. SC managers maintain this directly in Salesforce.</td>
+              </tr>
+              <tr>
+                <td><code>Opportunity</code></td>
+                <td><span class="modified">Modified</span></td>
+                <td>New field: <code>SC_Request_Notes__c</code>. Existing fields auto-populated on submit: Primary Solution Consultant, SC Date Requested, SC On Team ✓, Demo ✓</td>
+              </tr>
+              <tr>
+                <td><code>Event</code></td>
+                <td>Standard</td>
+                <td>Created on submit, linked to Opportunity. Title: "Request for [Type] for [Account] w/ a Solutions Consultant"</td>
+              </tr>
+              <tr>
+                <td><code>OpportunityTeamMember</code></td>
+                <td>Standard</td>
+                <td>SC added to Opportunity Team as "Solution Consultant" with Read/Write access</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top:32px;padding:20px 24px;background:#f0fdf4;border-radius:var(--radius);border-left:4px solid var(--green)">
+            <p style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:6px">SC Pairing — No More Spreadsheet</p>
+            <p style="font-size:14px;color:var(--text);line-height:1.7">SC managers maintain AE→SC assignments directly in Salesforce via a simple list view. One SC can be assigned to many AEs. Changes take effect immediately — no import required after initial setup.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Email Redesign -->
+      <section id="email" class="section">
+        <div class="section-inner">
+          <span class="section-label">Email Redesign</span>
+          <h1>Notifications That Actually Help</h1>
+          <p class="lead">The current email is a plain text list. The new one is structured, scannable, and has direct links to everything.</p>
+          <div class="email-mockup">
+            <div class="email-header">
+              <div class="email-header-badge">SC REQUEST</div>
+              <div class="email-header-title">A New SC Request Has Been Submitted</div>
+            </div>
+            <div class="email-body">
+              <p class="email-meta">Submitted by <strong>Juliana Gigas</strong> on <strong>March 16, 2026 at 10:34 AM</strong></p>
+              <div class="email-grid">
+                <div>
+                  <div class="email-field-label">Opportunity</div>
+                  <div class="email-field-value link">POC - AIOPT →</div>
+                </div>
+                <div>
+                  <div class="email-field-label">Primary Contact</div>
+                  <div class="email-field-value">Robert W. Sorensen</div>
+                </div>
+                <div>
+                  <div class="email-field-label">Request Type</div>
+                  <div class="email-field-value">Trial Engagement/POC</div>
+                </div>
+                <div>
+                  <div class="email-field-label">Product Line</div>
+                  <div class="email-field-value">GoToConnect</div>
+                </div>
+                <div>
+                  <div class="email-field-label">Assigned SC</div>
+                  <div class="email-field-value">Joe Varvel</div>
+                </div>
+                <div>
+                  <div class="email-field-label">Meeting Date &amp; Time</div>
+                  <div class="email-field-value date">March 20, 2026 at 8:00 AM</div>
+                </div>
+              </div>
+              <div class="email-notes">
+                <div class="email-notes-label">What does the customer want to achieve / solve?</div>
+                <div class="email-notes-body">Customer is evaluating GoToConnect for their 250-seat contact center. Looking for a demo focused on the supervisor dashboard and real-time reporting capabilities.</div>
+              </div>
+              <div class="email-actions">
+                <button class="email-btn email-btn-primary">View Opportunity →</button>
+                <button class="email-btn email-btn-secondary">View SC Request →</button>
+                <button class="email-btn email-btn-secondary">View Event →</button>
+              </div>
+              <div class="email-footer">
+                Sent to: <strong>Joe Varvel</strong> (SC) · <strong>Juliana Gigas</strong> (AE) · <strong>Taylor Brinton</strong> (AE Manager) · <strong>Tony Purcell</strong> (SC Manager)
+              </div>
+            </div>
+          </div>
+          <div class="cards" style="margin-top:32px">
+            <div class="card">
+              <div class="card-icon">🕐</div>
+              <h3>Actual Meeting Time</h3>
+              <p>No more "See Meeting Invite." The exact date and time is in the email.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">🔗</div>
+              <h3>Three Direct Links</h3>
+              <p>One click to the Opportunity, SC Request record, or Event — right from the email.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon">👥</div>
+              <h3>Recipient Transparency</h3>
+              <p>Everyone can see who else received the notification — no guessing.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Implementation Options -->
+      <section id="options" class="section">
+        <div class="section-inner">
+          <span class="section-label">Implementation Options</span>
+          <h1>Two Ways to Build It</h1>
+          <p class="lead">Both options deliver the same experience and write the same data to Salesforce. The difference is the platform.</p>
+          <table class="compare">
+            <thead>
+              <tr>
+                <th>Criterion</th>
+                <th>⭐ Option A — Salesforce Native</th>
+                <th>Option C — Slack Workflow</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="highlight">
+                <td><strong>Where AE works</strong></td>
+                <td class="yes">Inside Salesforce — no context switch</td>
+                <td class="partial">Slack — separate from SFDC</td>
+              </tr>
+              <tr>
+                <td><strong>Opportunity context</strong></td>
+                <td class="yes">Automatic — already on the record</td>
+                <td class="partial">AE must search for Opportunity</td>
+              </tr>
+              <tr class="highlight">
+                <td><strong>Build complexity</strong></td>
+                <td class="partial">Higher — LWC + Apex + Connected App</td>
+                <td class="yes">Medium — Node.js + Slack Bolt SDK</td>
+              </tr>
+              <tr>
+                <td><strong>Iteration speed</strong></td>
+                <td class="no">Slow — Salesforce deployment process</td>
+                <td class="yes">Fast — redeploy backend service</td>
+              </tr>
+              <tr class="highlight">
+                <td><strong>IT/Security compliance</strong></td>
+                <td class="yes">Native SFDC — already approved</td>
+                <td class="partial">New Slack app — needs approval</td>
+              </tr>
+              <tr>
+                <td><strong>Writes to Salesforce</strong></td>
+                <td class="yes">Yes — natively</td>
+                <td class="yes">Yes — via REST API</td>
+              </tr>
+              <tr class="highlight">
+                <td><strong>Long-term maintenance</strong></td>
+                <td class="yes">One system to maintain</td>
+                <td class="partial">SFDC + Slack app + backend service</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top:32px;padding:24px;background:var(--blue-light);border-radius:var(--radius);border-left:4px solid var(--blue)">
+            <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:8px">⭐ Recommendation: Option A — Salesforce Native</p>
+            <p style="font-size:15px;color:var(--text);line-height:1.7">AEs already live in Salesforce. Keeping everything native means no context-switching, no extra systems to maintain, and no new IT approvals. The higher build complexity is a one-time cost — the long-term simplicity is worth it.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. Next Steps -->
+      <section id="next-steps" class="section">
+        <div class="section-inner">
+          <span class="section-label">Next Steps</span>
+          <h1>What We Need to Move Forward</h1>
+          <p class="lead">Most decisions are already made. A few confirmations will unlock the full implementation.</p>
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <h3>Stakeholder Approval <span class="badge badge-blue">In Progress</span></h3>
+                <p>Get buy-in from SC leadership and Sales leadership to proceed with Option A (Salesforce Native).</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <h3>M365 OAuth Confirmation <span class="badge badge-amber">Pending IT</span></h3>
+                <p>Confirm with IT that the existing SSO / App Registration can be extended to cover <code>Calendars.Read</code> and <code>Calendars.ReadWrite</code> scopes for the Salesforce Connected App.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                <h3>SC Pairing Spreadsheet Export <span class="badge badge-amber">Pending SC Managers</span></h3>
+                <p>SC managers export the current AE→SC assignment spreadsheet for one-time import into the new <code>SC_Pairing__c</code> object in Salesforce.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-body">
+                <h3>Development Kickoff <span class="badge badge-green">Ready</span></h3>
+                <p>Full implementation plan is written and ready to execute. Covers 2 custom objects, 1 LWC modal, 1 Apex controller, M365 calendar integration, email flow, and Opportunity layout updates.</p>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:48px;padding:32px;background:var(--text);border-radius:var(--radius);text-align:center">
+            <p style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:8px">Questions or feedback?</p>
+            <p style="color:#fff;font-size:18px;font-weight:600">Let's make the SC request process work the way it should.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
