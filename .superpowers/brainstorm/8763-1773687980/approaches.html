@@ -1,0 +1,93 @@
+<h2>Three Approaches for SC Request</h2>
+<p class="subtitle">Each delivers the same core workflow — pick the platform that fits your team best</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Salesforce Native</h3>
+      <p>Custom Lightning component on the Opportunity record. AE never leaves SFDC. Uses SFDC flows, Apex, and M365 calendar API integration.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Lives where AEs already work</li>
+            <li>Directly tied to the Opportunity record</li>
+            <li>SFDC data (managers, teams) auto-available</li>
+            <li>No separate login or tool</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Slower to build and change</li>
+            <li>Requires Salesforce developer expertise</li>
+            <li>M365 OAuth adds complexity inside SFDC</li>
+            <li>Harder to iterate on UX</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Standalone Web App</h3>
+      <p>A purpose-built web app (e.g., Next.js) that integrates with Salesforce via API and M365 for calendar. AE opens it from a link on the Opportunity or from a bookmark.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Fast to build and easy to iterate</li>
+            <li>Full control over UX and calendar UI</li>
+            <li>Can embed in SFDC as a tab/iframe</li>
+            <li>No SFDC deployment process</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>AE leaves Salesforce to use it</li>
+            <li>Separate auth/login to manage</li>
+            <li>Needs SFDC + M365 API integrations</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Slack Workflow ⭐ Recommended</h3>
+      <p>A Slack workflow app. AE triggers it from any Slack channel or DM. Multi-step modal collects all request info, checks M365 calendar availability, posts a confirmation, and writes back to Salesforce via API.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>AEs already live in Slack</li>
+            <li>Fastest interaction — modal feels native</li>
+            <li>SC gets notified in Slack instantly</li>
+            <li>Easy to update and redeploy</li>
+            <li>Can still write everything back to SFDC</li>
+            <li>Slash command: <code>/request-sc</code></li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Requires Slack app infrastructure</li>
+            <li>AE must paste/search Opportunity ID or name</li>
+            <li>Less visual than a web UI for calendar picker</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;padding:16px;background:rgba(99,102,241,0.08);border-radius:8px;border-left:3px solid #6366f1">
+  <p class="label">My Recommendation</p>
+  <p><strong>Option C (Slack) as the primary interface</strong>, with <strong>Option B (Web App) as the calendar picker</strong> — the Slack modal handles the request form, but when the AE needs to pick a time slot, it links out to a lightweight web page showing availability. This gives you the best of both worlds: Slack speed + rich calendar UX. Both write back to Salesforce automatically.</p>
+</div>

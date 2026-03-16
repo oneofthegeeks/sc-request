@@ -1,0 +1,139 @@
+<h2>SC Request Flow — Step by Step</h2>
+<p class="subtitle">Both options cover the same steps — the difference is where it lives</p>
+
+<div class="split" style="gap:24px;align-items:start">
+  <div>
+    <div style="text-align:center;margin-bottom:12px">
+      <span style="background:#6366f1;color:white;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:600">Option A — Salesforce Native</span>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">Triggered from Opportunity Record</div>
+      <div class="mockup-body" style="padding:0">
+        <div style="display:flex;flex-direction:column;gap:0">
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#6366f1;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">AE clicks "Request SC" button</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">Button on Opportunity record header or Sales Engineering Info section</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#6366f1;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">Lightning modal opens</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">SC auto-selected based on AE→SC pairing. AE can override if needed.</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#6366f1;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">Calendar availability shown</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">M365 API queried for AE + SC free/busy. Next 5 open slots shown, plus mini calendar grid.</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#6366f1;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">4</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">AE selects request type & product line</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">Dropdowns: Demo / Discovery / etc. + GoTo Connect / Resolve / etc.</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#6366f1;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">5</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">AE fills in request details</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">Freeform text: current state, what they're solving, demo requirements</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#6366f1;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">6</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">AE submits</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">Single click. All actions fire automatically.</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#10b981;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">✓</div>
+            <div>
+              <div style="font-weight:600;font-size:13px;color:#10b981">Automated outcomes</div>
+              <div style="font-size:12px;opacity:0.7;margin-top:4px;line-height:1.6">
+                • SC_Request__c record created<br>
+                • Event created on Opportunity<br>
+                • SC added to Opportunity Team<br>
+                • Opp fields updated (SC name, date, checkbox, notes)<br>
+                • Email sent to AE, SC, both managers
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div style="text-align:center;margin-bottom:12px">
+      <span style="background:#f59e0b;color:white;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:600">Option C — Slack Workflow</span>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">Triggered from Slack — /request-sc</div>
+      <div class="mockup-body" style="padding:0">
+        <div style="display:flex;flex-direction:column;gap:0">
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#f59e0b;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">AE types /request-sc in Slack</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">Works from any channel or DM. Slack modal opens instantly.</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#f59e0b;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">AE searches for Opportunity</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">Type-ahead search against Salesforce Opportunities by name or ID</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#f59e0b;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">SC auto-selected, AE can override</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">Pairing lookup same as Option A</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#f59e0b;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">4</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">Request type, product line, details</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">Dropdowns + text area in the Slack modal</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#f59e0b;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">5</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">Calendar availability</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">Bot posts available slots as buttons in a follow-up message. AE taps to confirm time.</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#f59e0b;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">6</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">AE submits</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:2px">Confirmation message posted to AE's DM and optionally a team channel</div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;display:flex;gap:12px;align-items:flex-start">
+            <div style="background:#10b981;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">✓</div>
+            <div>
+              <div style="font-weight:600;font-size:13px;color:#10b981">Automated outcomes</div>
+              <div style="font-size:12px;opacity:0.7;margin-top:4px;line-height:1.6">
+                • Same SFDC writes as Option A<br>
+                • Slack DM to SC with full details<br>
+                • Email to AE, SC, both managers<br>
+                • Confirmation message in Slack
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

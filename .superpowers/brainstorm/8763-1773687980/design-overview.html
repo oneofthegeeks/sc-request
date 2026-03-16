@@ -1,0 +1,99 @@
+<h2>SC Request System — Full Design</h2>
+<p class="subtitle">Two options fully specced. Option A is the recommended primary build.</p>
+
+<div class="section">
+  <h3>Shared Foundation (Both Options)</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+
+    <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:16px">
+      <p class="label">Salesforce Objects</p>
+      <ul style="margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.9">
+        <li><strong>SC_Request__c</strong> — new custom object, full request record</li>
+        <li><strong>Event</strong> — created on submit, title format preserved</li>
+        <li><strong>OpportunityTeamMember</strong> — SC added as Solution Consultant</li>
+        <li><strong>User</strong> — AE, SC, managers via ManagerId</li>
+        <li><strong>SC_Pairing__c</strong> — new custom object, AE→SC mapping (imported from spreadsheet)</li>
+      </ul>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:16px">
+      <p class="label">Opportunity Fields Updated on Submit</p>
+      <ul style="margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.9">
+        <li><strong>Primary Solution Consultant</strong> — auto-populated</li>
+        <li><strong>SC Date Requested</strong> — auto-populated</li>
+        <li><strong>SC On Team</strong> ✓ — auto-checked</li>
+        <li><strong>Demo</strong> ✓ — auto-checked if request type = Demo</li>
+        <li><strong>SC Request Notes</strong> — NEW field, AE's freeform details</li>
+      </ul>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:16px">
+      <p class="label">Static Picklists (dev-ticket to update)</p>
+      <ul style="margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.9">
+        <li><strong>Request Type:</strong> Demo, Discovery, + others</li>
+        <li><strong>Product Line:</strong> GoTo Connect, Resolve, + others</li>
+      </ul>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:16px">
+      <p class="label">Notifications on Submit</p>
+      <ul style="margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.9">
+        <li>Email → AE</li>
+        <li>Email → SC</li>
+        <li>Email → AE's Manager (via User.ManagerId)</li>
+        <li>Email → SC's Manager (via User.ManagerId)</li>
+        <li>All emails include full request details</li>
+      </ul>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:16px;grid-column:1/-1">
+      <p class="label">Calendar Availability (M365 Integration)</p>
+      <div style="font-size:13px;line-height:1.8;margin-top:8px">
+        Queries Microsoft 365 free/busy for both AE and SC simultaneously. Shows:
+        <ul style="padding-left:18px;margin:6px 0 0">
+          <li><strong>Quick slots:</strong> Next 5 open windows that work for both (default view)</li>
+          <li><strong>Date picker:</strong> AE can select a specific date to see all open times that day</li>
+          <li>Duration options: 30 min / 1 hour / 90 min</li>
+          <li>Business hours only (configurable)</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <h3 style="color:#6366f1">Option A — Salesforce Native (Recommended)</h3>
+  <div style="background:rgba(99,102,241,0.07);border-radius:8px;padding:16px;font-size:13px;line-height:1.8">
+    <p class="label">How it works</p>
+    <p>A <strong>Lightning Web Component (LWC)</strong> button — "Request SC" — placed in the Sales Engineering Info section of the Opportunity layout. Clicking it opens a <strong>Lightning modal</strong> with a multi-step form. On submit, an <strong>Apex controller</strong> handles all writes (Event, OpportunityTeamMember, SC_Request__c, Opportunity field updates). Email alerts fired via SFDC Email Alert automation. M365 calendar queried via a <strong>Named Credential + External Service</strong> (OAuth 2.0 Connected App).</p>
+    <p style="margin-top:12px"><strong>SC Pairing management:</strong> SC managers maintain pairings directly in a simple Salesforce list view on the SC_Pairing__c object — no spreadsheet needed after initial import. Changes take effect immediately.</p>
+    <div style="margin-top:12px;padding:10px;background:rgba(99,102,241,0.1);border-radius:6px">
+      <strong>Build complexity:</strong> High — requires LWC, Apex, Connected App OAuth setup, Named Credentials<br>
+      <strong>Change velocity:</strong> Slow — Salesforce deployment process for any UI changes<br>
+      <strong>User experience:</strong> Best — AE never leaves Salesforce
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3 style="color:#f59e0b">Option C — Slack Workflow (Alternative)</h3>
+  <div style="background:rgba(245,158,11,0.07);border-radius:8px;padding:16px;font-size:13px;line-height:1.8">
+    <p class="label">How it works</p>
+    <p>A <strong>Slack app</strong> with a <code>/request-sc</code> slash command. Opens a <strong>Slack modal</strong> with the same form fields. AE searches for the Opportunity by name (type-ahead via Salesforce API). On submit, a <strong>Node.js/Python backend service</strong> handles all Salesforce writes (same objects as Option A) and M365 calendar queries. Calendar availability posted as interactive Slack message buttons. Confirmation DM sent to AE and SC in Slack, plus the same 4-recipient email.</p>
+    <p style="margin-top:12px"><strong>Key difference:</strong> Opportunity lookup adds one extra step vs. Option A, but the workflow can be triggered from anywhere in Slack — ideal for AEs who work primarily in Slack.</p>
+    <div style="margin-top:12px;padding:10px;background:rgba(245,158,11,0.1);border-radius:6px">
+      <strong>Build complexity:</strong> Medium — Slack app + backend service + Salesforce API + M365 API<br>
+      <strong>Change velocity:</strong> Fast — redeploy backend, no Salesforce deployment needed<br>
+      <strong>User experience:</strong> Good — native Slack feel, but context switch from SFDC
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:8px;padding:16px;background:rgba(16,185,129,0.08);border-radius:8px;border-left:3px solid #10b981">
+  <p class="label">Event Title Format (Preserved)</p>
+  <p style="font-size:13px;margin-top:6px">
+    <code>"Request for [Request Type] for [Account Name] w/ a Solutions Consultant"</code><br>
+    <span style="opacity:0.7">Event description = SC Request Notes (AE's freeform details)</span>
+  </p>
+</div>

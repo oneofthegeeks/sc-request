@@ -1,0 +1,100 @@
+<h2>SC Request Email — Redesigned</h2>
+<p class="subtitle">HTML email with clear sections, links to Salesforce records, and the actual meeting time</p>
+
+<div class="mockup" style="max-width:640px;margin:0 auto">
+  <div class="mockup-header">Email Preview — "A New SC Request Has Been Submitted"</div>
+  <div class="mockup-body" style="padding:0;background:#ffffff;color:#1a1a1a;font-family:Arial,sans-serif;font-size:14px">
+
+    <!-- Header Banner -->
+    <div style="background:#0070d2;padding:20px 28px;display:flex;align-items:center;gap:12px">
+      <div style="background:white;border-radius:6px;padding:4px 10px;font-weight:700;font-size:13px;color:#0070d2">SC REQUEST</div>
+      <div style="color:white;font-size:16px;font-weight:600">A New SC Request Has Been Submitted</div>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:24px 28px">
+
+      <!-- Submitted by line -->
+      <p style="margin:0 0 20px;color:#444;font-size:13px">
+        Submitted by <strong>Juliana Gigas</strong> on <strong>March 16, 2026 at 10:34 AM</strong>
+      </p>
+
+      <!-- Key details card -->
+      <div style="background:#f4f6f9;border-radius:8px;padding:16px 20px;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px">
+
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600;margin-bottom:3px">Opportunity</div>
+            <div style="font-weight:600;color:#0070d2">POC - AIOPT</div>
+          </div>
+
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600;margin-bottom:3px">Primary Contact</div>
+            <div style="font-weight:600">Robert W. Sorensen</div>
+          </div>
+
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600;margin-bottom:3px">Request Type</div>
+            <div style="font-weight:600">Trial Engagement/POC</div>
+          </div>
+
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600;margin-bottom:3px">Product Line</div>
+            <div style="font-weight:600">GoToConnect</div>
+          </div>
+
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600;margin-bottom:3px">Assigned SC</div>
+            <div style="font-weight:600">Joe Varvel</div>
+          </div>
+
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600;margin-bottom:3px">Meeting Date &amp; Time</div>
+            <div style="font-weight:600;color:#c23934">March 20, 2026 at 8:00 AM</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Notes section -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600;margin-bottom:8px">What does the customer want to achieve / solve?</div>
+        <div style="background:#fffbf0;border-left:3px solid #f59e0b;padding:12px 16px;border-radius:0 6px 6px 0;color:#333;font-size:13px;line-height:1.6">
+          nothing needed here!
+        </div>
+      </div>
+
+      <!-- CTA Buttons -->
+      <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+        <a style="background:#0070d2;color:white;padding:10px 18px;border-radius:5px;text-decoration:none;font-size:13px;font-weight:600">
+          View Opportunity →
+        </a>
+        <a style="background:#ffffff;color:#0070d2;padding:10px 18px;border-radius:5px;text-decoration:none;font-size:13px;font-weight:600;border:1.5px solid #0070d2">
+          View SC Request Record →
+        </a>
+        <a style="background:#ffffff;color:#0070d2;padding:10px 18px;border-radius:5px;text-decoration:none;font-size:13px;font-weight:600;border:1.5px solid #0070d2">
+          View Event →
+        </a>
+      </div>
+
+      <!-- Footer -->
+      <div style="border-top:1px solid #e5e7eb;padding-top:16px;font-size:12px;color:#888">
+        This notification was sent to: <strong>Joe Varvel</strong> (SC), <strong>Juliana Gigas</strong> (AE), <strong>Taylor Brinton</strong> (AE Manager), <strong>Tony Purcell</strong> (SC Manager)
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:24px;max-width:640px;margin-left:auto;margin-right:auto">
+  <h3>What's improved</h3>
+  <ul style="font-size:13px;line-height:1.9;padding-left:20px">
+    <li><strong>Actual meeting time</strong> — no more "See Meeting Invite"</li>
+    <li><strong>Primary contact from Opportunity</strong> — auto-populated, no broken empty field</li>
+    <li><strong>Three direct links</strong> — Opportunity, SC Request record, Event (all open in Salesforce)</li>
+    <li><strong>No secondary product, no location</strong> — removed as agreed</li>
+    <li><strong>Notes highlighted</strong> — visually distinct section, easy to read</li>
+    <li><strong>Recipient footer</strong> — everyone can see who else got the email</li>
+    <li><strong>Submission timestamp</strong> — when it was submitted, not just the meeting date</li>
+  </ul>
+</div>
