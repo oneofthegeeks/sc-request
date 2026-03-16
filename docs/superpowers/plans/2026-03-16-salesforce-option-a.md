@@ -161,7 +161,7 @@ Create `force-app/main/default/objects/SC_Request__c/SC_Request__c.object-meta.x
 </CustomObject>
 ```
 
-- [ ] **Step 2: Create all 7 fields**
+- [ ] **Step 2: Create all 9 fields**
 
 Create `force-app/main/default/objects/SC_Request__c/fields/Opportunity__c.field-meta.xml`:
 ```xml
@@ -286,8 +286,42 @@ Create `force-app/main/default/objects/SC_Request__c/fields/Submitted_Date__c.fi
     <label>Submitted Date</label>
     <type>Formula</type>
     <formula>CreatedDate</formula>
-    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <returnType>DateTime</returnType>
+</CustomField>
+```
+
+Create `force-app/main/default/objects/SC_Request__c/fields/Status__c.field-meta.xml`:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Status__c</fullName>
+    <label>Status</label>
+    <type>Picklist</type>
+    <required>true</required>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>Submitted</fullName><default>true</default></value>
+            <value><fullName>Confirmed</fullName><default>false</default></value>
+            <value><fullName>Completed</fullName><default>false</default></value>
+            <value><fullName>Cancelled</fullName><default>false</default></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
+```
+
+Create `force-app/main/default/objects/SC_Request__c/fields/Submitted_By__c.field-meta.xml`:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Submitted_By__c</fullName>
+    <label>Submitted By</label>
+    <type>Lookup</type>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>SC Requests (Submitted By)</relationshipLabel>
+    <relationshipName>SC_Requests_Submitted_By</relationshipName>
+    <required>true</required>
+    <description>The AE who submitted this SC request.</description>
 </CustomField>
 ```
 
@@ -423,6 +457,7 @@ private class ScRequestControllerTest {
         input.productLine = 'GoToConnect';
         input.requestNotes = 'Test notes for demo';
         input.meetingDate = Datetime.now().addDays(3);
+        input.durationMinutes = 60;
         input.sendCalendarInvite = false;
 
         Test.startTest();
@@ -447,9 +482,14 @@ private class ScRequestControllerTest {
         System.assertEquals('Solution Consultant', members[0].TeamMemberRole);
 
         // Verify Opportunity fields updated
-        Opportunity updatedOpp = [SELECT SC_Request_Notes__c, SC_On_Team__c FROM Opportunity WHERE Id = :opp.Id];
+        Opportunity updatedOpp = [
+            SELECT SC_Request_Notes__c, SC_On_Team__c, Primary_Solution_Consultant__c, SC_Date_Requested__c
+            FROM Opportunity WHERE Id = :opp.Id
+        ];
         System.assertEquals('Test notes for demo', updatedOpp.SC_Request_Notes__c);
         System.assertEquals(true, updatedOpp.SC_On_Team__c);
+        System.assertEquals(sc.Id, updatedOpp.Primary_Solution_Consultant__c, 'Primary SC should be set');
+        System.assertNotEquals(null, updatedOpp.SC_Date_Requested__c, 'SC Date Requested should be set');
     }
 
     @IsTest
@@ -547,6 +587,7 @@ public with sharing class ScRequestController {
         @AuraEnabled public String productLine;
         @AuraEnabled public String requestNotes;
         @AuraEnabled public Datetime meetingDate;
+        @AuraEnabled public Integer durationMinutes; // 30, 60, or 90
         @AuraEnabled public Boolean sendCalendarInvite;
     }
 
@@ -566,6 +607,21 @@ public with sharing class ScRequestController {
         if (!pairings.isEmpty()) {
             result.assignedSCId = pairings[0].SC__c;
             result.hasMultiplePairings = pairings.size() > 1;
+            if (result.hasMultiplePairings) {
+                // Notify the SC's manager to clean up duplicate pairings
+                User sc = [SELECT Manager.Email, Manager.Name FROM User WHERE Id = :pairings[0].SC__c LIMIT 1];
+                if (sc.Manager != null && String.isNotBlank(sc.Manager.Email)) {
+                    Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+                    mail.setToAddresses(new List<String>{ sc.Manager.Email });
+                    mail.setSubject('Action Required: Duplicate SC Pairing Detected');
+                    mail.setPlainTextBody(
+                        'AE ' + UserInfo.getName() + ' has multiple active SC pairings in Salesforce. ' +
+                        'Please review SC_Pairing__c records for this AE and deactivate any stale entries.\n\n' +
+                        'AE User Id: ' + currentUserId
+                    );
+                    Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ mail });
+                }
+            }
         }
 
         result.allSCs = getAllActiveSCs();
@@ -609,7 +665,9 @@ public with sharing class ScRequestController {
                 Request_Type__c = input.requestType,
                 Product_Line__c = input.productLine,
                 Request_Notes__c = input.requestNotes,
-                Meeting_Date__c = input.meetingDate
+                Meeting_Date__c = input.meetingDate,
+                Status__c = 'Submitted',
+                Submitted_By__c = UserInfo.getUserId()
             );
             insert request;
 
@@ -617,11 +675,12 @@ public with sharing class ScRequestController {
             String eventSubject = 'Request for ' + input.requestType +
                                   ' for ' + opp.Account.Name +
                                   ' w/ a Solutions Consultant';
+            Integer duration = (input.durationMinutes != null && input.durationMinutes > 0) ? input.durationMinutes : 60;
             Event evt = new Event(
                 Subject = eventSubject,
                 Description = input.requestNotes,
                 StartDateTime = input.meetingDate,
-                EndDateTime = input.meetingDate.addHours(1),
+                EndDateTime = input.meetingDate.addMinutes(duration),
                 WhatId = input.opportunityId,
                 OwnerId = UserInfo.getUserId(),
                 Type = input.requestType
@@ -1041,16 +1100,30 @@ describe('scRequestModal', () => {
         expect(warning).not.toBeNull();
     });
 
-    it('calendar invite checkbox is checked by default', async () => {
-        getAssignedSC.mockResolvedValue({ assignedSCId: null, hasMultiplePairings: false, allSCs: [] });
+    it('calendar invite checkbox is checked by default on step 3', async () => {
+        getAssignedSC.mockResolvedValue({
+            assignedSCId: '005xx000001X1AAAZ',
+            hasMultiplePairings: false,
+            allSCs: [{ id: '005xx000001X1AAAZ', name: 'Joe Varvel' }]
+        });
+        getAvailableSlots.mockResolvedValue([]);
 
         const el = createElement('c-sc-request-modal', { is: scRequestModal });
         el.recordId = '006xx000001234AAA';
         document.body.appendChild(el);
         await Promise.resolve();
 
-        // Navigate to step 3 (review)
-        el.currentStep = 3;
+        // Simulate selecting a manual date so step 1 is valid, then click Next twice
+        const dateInput = el.shadowRoot.querySelector('lightning-input[type="datetime-local"]');
+        if (dateInput) dateInput.dispatchEvent(new CustomEvent('change', { detail: { value: '2026-04-01T10:00' } }));
+        el.shadowRoot.querySelector('[label="Next"]').click();
+        await Promise.resolve();
+
+        // Set required step 2 fields
+        el.shadowRoot.querySelectorAll('lightning-combobox').forEach((combo, i) => {
+            combo.dispatchEvent(new CustomEvent('change', { detail: { value: i === 0 ? 'Demo Request' : 'GoToConnect' } }));
+        });
+        el.shadowRoot.querySelector('[label="Next"]').click();
         await Promise.resolve();
 
         const checkbox = el.shadowRoot.querySelector('[data-field="sendCalendarInvite"]');
@@ -1258,9 +1331,12 @@ Create `force-app/main/default/lwc/scRequestModal/scRequestModal.html`:
 Create `force-app/main/default/lwc/scRequestModal/scRequestModal.js`:
 
 ```javascript
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { getRecord } from 'lightning/uiRecordApi';
+import { notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
+import USER_ID from '@salesforce/user/Id';
 import getAssignedSC from '@salesforce/apex/ScRequestController.getAssignedSC';
 import getAvailableSlots from '@salesforce/apex/M365CalendarService.getAvailableSlots';
 import submitRequest from '@salesforce/apex/ScRequestController.submitRequest';
@@ -1332,7 +1408,7 @@ export default class ScRequestModal extends NavigationMixin(LightningElement) {
         const fiveDaysOut = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
 
         getAvailableSlots({
-            aeUserId: this.recordId,
+            aeUserId: USER_ID,
             scUserId: this.selectedSCId,
             rangeStart: now.toISOString(),
             rangeEnd: fiveDaysOut.toISOString(),
@@ -1416,6 +1492,7 @@ export default class ScRequestModal extends NavigationMixin(LightningElement) {
                 productLine: this.productLine,
                 requestNotes: this.requestNotes,
                 meetingDate: this.selectedSlot || this.manualDateTime,
+                durationMinutes: parseInt(this.selectedDuration),
                 sendCalendarInvite: this.sendCalendarInvite
             }
         })
@@ -1523,6 +1600,7 @@ Create `force-app/main/default/lwc/scRequestAction/scRequestAction.js`:
 
 ```javascript
 import { LightningElement, api } from 'lwc';
+import { notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
 
 export default class ScRequestAction extends LightningElement {
     @api recordId;
@@ -1530,8 +1608,8 @@ export default class ScRequestAction extends LightningElement {
     isOpen = false;
     handleClose() {
         this.isOpen = false;
-        // Refresh the Opportunity page to show updated fields
-        eval("$A.get('e.force:refreshView').fire();");
+        // Notify LDS to re-fetch the Opportunity record so updated fields reflect on-screen
+        notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
     }
 }
 ```
@@ -1554,7 +1632,62 @@ Create `force-app/main/default/lwc/scRequestAction/scRequestAction.js-meta.xml`:
 </LightningComponentBundle>
 ```
 
-- [ ] **Step 2: Deploy wrapper**
+- [ ] **Step 2: Write Jest tests for scRequestAction**
+
+Create `force-app/main/default/lwc/scRequestAction/__tests__/scRequestAction.test.js`:
+
+```javascript
+import { createElement } from 'lwc';
+import scRequestAction from 'c/scRequestAction';
+import { notifyRecordUpdateAvailable } from 'lightning/uiRecordApi';
+
+jest.mock('lightning/uiRecordApi', () => ({ notifyRecordUpdateAvailable: jest.fn() }), { virtual: true });
+
+describe('scRequestAction', () => {
+    afterEach(() => { while (document.body.firstChild) document.body.removeChild(document.body.firstChild); });
+
+    it('does not render modal before invoke()', async () => {
+        const el = createElement('c-sc-request-action', { is: scRequestAction });
+        el.recordId = '006xx000001234AAA';
+        document.body.appendChild(el);
+        await Promise.resolve();
+        expect(el.shadowRoot.querySelector('c-sc-request-modal')).toBeNull();
+    });
+
+    it('renders modal after invoke()', async () => {
+        const el = createElement('c-sc-request-action', { is: scRequestAction });
+        el.recordId = '006xx000001234AAA';
+        document.body.appendChild(el);
+        el.invoke();
+        await Promise.resolve();
+        expect(el.shadowRoot.querySelector('c-sc-request-modal')).not.toBeNull();
+    });
+
+    it('closes modal and calls notifyRecordUpdateAvailable on close event', async () => {
+        const el = createElement('c-sc-request-action', { is: scRequestAction });
+        el.recordId = '006xx000001234AAA';
+        document.body.appendChild(el);
+        el.invoke();
+        await Promise.resolve();
+
+        el.shadowRoot.querySelector('c-sc-request-modal').dispatchEvent(new CustomEvent('close'));
+        await Promise.resolve();
+
+        expect(el.shadowRoot.querySelector('c-sc-request-modal')).toBeNull();
+        expect(notifyRecordUpdateAvailable).toHaveBeenCalledWith([{ recordId: '006xx000001234AAA' }]);
+    });
+});
+```
+
+- [ ] **Step 3: Run Jest tests for scRequestAction**
+
+```bash
+cd force-app/main/default/lwc/scRequestAction && npx jest --no-coverage
+```
+
+Expected: All 3 tests PASS.
+
+- [ ] **Step 4: Deploy wrapper**
 
 ```bash
 sf project deploy start --source-dir force-app/main/default/lwc/scRequestAction
@@ -1700,9 +1833,15 @@ Create `force-app/main/default/namedCredentials/M365_Graph_API.namedCredential-m
 sf project deploy start --source-dir force-app/main/default/namedCredentials
 ```
 
-- [ ] **Step 5: Authorize a test user**
+- [ ] **Step 5: Authorize users via OAuth — IMPORTANT: Per-user auth required**
 
-In Salesforce Setup → Named Credentials → M365_Graph_API → click "Edit" → authenticate a test user via OAuth flow.
+The Named Credential uses `principalType: NamedUser`, meaning **every AE must individually authorize their M365 account** before the calendar integration will work for them. This is a one-time setup per user.
+
+**For each AE:** In Salesforce → top-right avatar → Settings → Authentication Settings for External Systems → find `M365_Graph_API` → click "Authenticate". This opens the M365 OAuth flow. The AE logs in with their GoTo M365 credentials and grants access.
+
+**Rollout plan:** IT or Salesforce admin should send instructions to all AEs before go-live. If an AE has not authenticated, the LWC gracefully falls back to the manual date entry — the form is never blocked.
+
+First, authorize at least one test user to verify the full OAuth flow works end-to-end.
 
 - [ ] **Step 6: Test calendar API call**
 
