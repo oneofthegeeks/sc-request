@@ -5,7 +5,7 @@ A redesign of the Salesforce SC (Solutions Consultant) request process used by A
 
 ## Key Documents
 - **Design Spec:** `docs/superpowers/specs/2026-03-16-sc-request-design.md` — full requirements, data model, and design decisions
-- **Presentation Site:** `docs/site/` — GitHub Pages site for stakeholder buy-in
+- **Presentation Site:** `docs/` — GitHub Pages site for stakeholder buy-in (served from `docs/` on `main` branch)
 
 ## Chosen Approach
 - **Primary:** Option A — Salesforce Native LWC (Lightning Web Component)
@@ -54,6 +54,8 @@ A redesign of the Salesforce SC (Solutions Consultant) request process used by A
 - Customer contact scheduling (AE handles separately)
 
 ## GitHub Pages Site
-- Source: `docs/site/`
+- Source: `docs/` folder on `main` branch
+- Live URL: https://oneofthegeeks.github.io/sc-request/
+- GitHub repo: https://github.com/oneofthegeeks/sc-request
 - Purpose: Stakeholder presentation for buy-in
-- Sections mirror the spec: Problem, Proposed Solution, Flow Walkthrough, Data Model, Email Design, Implementation Options, Open Questions
+- Sections: Problem, Proposed Solution, Flow Walkthrough, Data Model, Email Design, Implementation Options, Next Steps
