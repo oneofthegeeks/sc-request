@@ -27,6 +27,15 @@
         <li><a href="#options" class="nav-link">Implementation Options</a></li>
         <li><a href="#next-steps" class="nav-link">Next Steps</a></li>
       </ul>
+      <div class="nav-divider">Technical Reference</div>
+      <ul class="nav-list" id="nav-list-tech">
+        <li><a href="#tech-architecture" class="nav-link">Architecture</a></li>
+        <li><a href="#field-reference" class="nav-link">Field Reference</a></li>
+        <li><a href="#sc-selection-logic" class="nav-link">SC Selection Logic</a></li>
+        <li><a href="#m365-details" class="nav-link">M365 Integration</a></li>
+        <li><a href="#scope" class="nav-link">Scope &amp; Boundaries</a></li>
+        <li><a href="#impl-plan" class="nav-link">Implementation Plan</a></li>
+      </ul>
     </nav>
 
     <!-- Main content -->
@@ -406,6 +415,511 @@
           <div class="closing-cta">
             <p class="closing-cta-sub">Questions or feedback?</p>
             <p class="closing-cta-main">Let's make the SC request process <em>work the way it should.</em></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. Technical Architecture -->
+      <section id="tech-architecture" class="section">
+        <div class="section-inner">
+          <span class="section-label">Technical Reference</span>
+          <h1>Architecture Overview</h1>
+          <p class="lead">Option A — Salesforce Native. Every component lives inside Salesforce or is accessed via Named Credential.</p>
+
+          <table class="tech-table" style="margin-top:32px">
+            <thead>
+              <tr><th>Component</th><th>Type</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>scRequestModal</td>
+                <td class="plain">LWC</td>
+                <td class="plain">3-step modal form: SC &amp; calendar → Request details → Review &amp; submit</td>
+              </tr>
+              <tr>
+                <td>scRequestAction</td>
+                <td class="plain">LWC (wrapper)</td>
+                <td class="plain">Quick Action wrapper that launches scRequestModal and calls <code>notifyRecordUpdateAvailable</code> on close to refresh the Opportunity page</td>
+              </tr>
+              <tr>
+                <td>ScRequestController</td>
+                <td class="plain">Apex</td>
+                <td class="plain">All DML in a single transaction with Savepoint/rollback: creates SC_Request__c, Event, OpportunityTeamMember, updates Opportunity fields</td>
+              </tr>
+              <tr>
+                <td>M365CalendarService</td>
+                <td class="plain">Apex</td>
+                <td class="plain">Queries M365 Graph API free/busy endpoint. Creates Outlook calendar event when invite checkbox is checked.</td>
+              </tr>
+              <tr>
+                <td>M365_Graph_API</td>
+                <td class="plain">Named Credential</td>
+                <td class="plain">Stores M365 OAuth token. Principal type: NamedUser — each user authenticates individually via the Auth Provider onboarding flow.</td>
+              </tr>
+              <tr>
+                <td>M365 Connected App</td>
+                <td class="plain">Auth Provider</td>
+                <td class="plain">OAuth 2.0 App Registration in Azure AD. Scopes: <code>Calendars.Read</code>, <code>Calendars.ReadWrite</code></td>
+              </tr>
+              <tr>
+                <td>SC Request Email Flow</td>
+                <td class="plain">Record-Triggered Flow</td>
+                <td class="plain">Fires on SC_Request__c insert. Sends 4 separate email alerts: AE, SC, AE Manager (<code>AE.ManagerId</code>), SC Manager (<code>SC.ManagerId</code>)</td>
+              </tr>
+              <tr>
+                <td>SC_Request__c</td>
+                <td class="plain">Custom Object</td>
+                <td class="plain">Master-Detail to Opportunity. Stores the full request record for reporting and history.</td>
+              </tr>
+              <tr>
+                <td>SC_Pairing__c</td>
+                <td class="plain">Custom Object</td>
+                <td class="plain">AE→SC assignment data. Replaces external spreadsheet. Validation rule enforces one active pairing per AE.</td>
+              </tr>
+              <tr>
+                <td>TestDataFactory</td>
+                <td class="plain">Apex (test)</td>
+                <td class="plain">Creates test Users, Opportunities, SC_Pairing__c records for all Apex test classes</td>
+              </tr>
+              <tr>
+                <td>M365CalendarMock</td>
+                <td class="plain">Apex (test)</td>
+                <td class="plain">HttpCalloutMock implementation for unit testing M365CalendarService without live API calls</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout-yellow" style="margin-top:32px">
+            <div class="callout-yellow-label">Entry Point — No Change Required</div>
+            <div class="callout-yellow-body">The existing "Request SC" Quick Action in the Opportunity action bar overflow menu is reused as-is. The LWC replaces the current Flow behind it. Label stays "Request SC" — no retraining needed.</div>
+          </div>
+
+          <h2 style="font-size:20px;font-weight:700;margin-top:40px;margin-bottom:8px">Tech Stack</h2>
+          <div class="pills">
+            <span class="pill">Salesforce LWC</span>
+            <span class="pill">Apex</span>
+            <span class="pill">SOQL</span>
+            <span class="pill">Named Credentials</span>
+            <span class="pill">M365 Graph API</span>
+            <span class="pill">Record-Triggered Flow</span>
+            <span class="pill">Salesforce CLI (sf)</span>
+            <span class="pill">Jest (LWC tests)</span>
+            <span class="pill">Apex Test Classes</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. Field Reference -->
+      <section id="field-reference" class="section">
+        <div class="section-inner">
+          <span class="section-label">Technical Reference</span>
+          <h1>Field Reference</h1>
+          <p class="lead">All custom objects, fields, and Opportunity field updates created or modified by this project.</p>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:36px;margin-bottom:4px">SC_Request__c <span style="font-size:13px;font-weight:500;color:var(--text-muted);margin-left:8px">New Custom Object — Master-Detail to Opportunity</span></h2>
+          <table class="data-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>Opportunity__c</code></td><td>Master-Detail(Opportunity)</td><td>Parent opportunity. Required.</td></tr>
+              <tr><td><code>Requested_SC__c</code></td><td>Lookup(User)</td><td>SC selected for this request.</td></tr>
+              <tr><td><code>Request_Type__c</code></td><td>Picklist</td><td>14 values — see Picklists section below.</td></tr>
+              <tr><td><code>Product_Line__c</code></td><td>Picklist</td><td>17 values — see Picklists section below.</td></tr>
+              <tr><td><code>Request_Notes__c</code></td><td>Long Text Area</td><td>AE's freeform notes: current state, problem, demo requirements.</td></tr>
+              <tr><td><code>Meeting_Date__c</code></td><td>DateTime</td><td>Selected meeting date and time. Required.</td></tr>
+              <tr><td><code>Status__c</code></td><td>Picklist</td><td>Submitted → Confirmed → Completed → Cancelled</td></tr>
+              <tr><td><code>Submitted_By__c</code></td><td>Lookup(User)</td><td>AE who submitted. Set to <code>UserInfo.getUserId()</code> in Apex.</td></tr>
+              <tr><td><code>Submitted_Date__c</code></td><td>Formula(DateTime)</td><td>Formula: <code>CreatedDate</code>. Always accurate, no Apex needed.</td></tr>
+            </tbody>
+          </table>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:36px;margin-bottom:4px">SC_Pairing__c <span style="font-size:13px;font-weight:500;color:var(--text-muted);margin-left:8px">New Custom Object — replaces spreadsheet</span></h2>
+          <table class="data-table">
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>AE__c</code></td><td>Lookup(User)</td><td>The Account Executive. Required.</td></tr>
+              <tr><td><code>SC__c</code></td><td>Lookup(User)</td><td>Their assigned Solutions Consultant. Required.</td></tr>
+              <tr><td><code>Active__c</code></td><td>Checkbox</td><td>Default: true. Validation rule prevents more than one active pairing per AE.</td></tr>
+            </tbody>
+          </table>
+          <div class="info-callout" style="margin-top:16px">
+            <div class="info-callout-label">Initial Data Load</div>
+            <div class="info-callout-body">One-time CSV import via Salesforce Data Import Wizard. SC manager exports the existing spreadsheet, maps <code>AE__c</code> and <code>SC__c</code> by User email. All records must have <code>Active__c = true</code> before go-live. Dev team provides field mapping guide.</div>
+          </div>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:36px;margin-bottom:4px">Opportunity <span style="font-size:13px;font-weight:500;color:var(--text-muted);margin-left:8px">Modified — fields auto-updated on submit</span></h2>
+          <table class="data-table">
+            <thead><tr><th>Field</th><th>Status</th><th>Value Set On Submit</th></tr></thead>
+            <tbody>
+              <tr><td><code>SC_Request_Notes__c</code></td><td><span class="new">New</span></td><td>AE's request notes. Added to Sales Engineering Info section on layout.</td></tr>
+              <tr><td><code>Primary_Solution_Consultant__c</code></td><td>Existing</td><td>SC selected in the request form.</td></tr>
+              <tr><td><code>SC_Date_Requested__c</code></td><td>Existing</td><td>Meeting date/time selected in the request form.</td></tr>
+              <tr><td><code>SC_On_Team__c</code></td><td>Existing</td><td>Set to <code>true</code>.</td></tr>
+              <tr><td><code>Demo__c</code></td><td>Existing</td><td>Set to <code>true</code> only if Request Type = "Demo Request".</td></tr>
+            </tbody>
+          </table>
+          <div class="info-callout" style="margin-top:16px">
+            <div class="info-callout-label">Fields NOT touched by this process</div>
+            <div class="info-callout-body"><code>Pre_Sales_Stage__c</code> — managed independently. &nbsp;·&nbsp; <code>SC_Notes__c</code> — SC-owned field, never overwritten by this process.</div>
+          </div>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:36px;margin-bottom:4px">Event <span style="font-size:13px;font-weight:500;color:var(--text-muted);margin-left:8px">Standard object — created on submit</span></h2>
+          <table class="data-table">
+            <thead><tr><th>Field</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td><code>Subject</code></td><td>"Request for [Request_Type__c] for [Account Name] w/ a Solutions Consultant"</td></tr>
+              <tr><td><code>Description</code></td><td>SC Request Notes (AE's freeform text)</td></tr>
+              <tr><td><code>StartDateTime</code></td><td>Meeting date/time selected in form</td></tr>
+              <tr><td><code>EndDateTime</code></td><td>StartDateTime + duration (30 / 60 / 90 min)</td></tr>
+              <tr><td><code>OwnerId</code></td><td>AE (submitter — <code>UserInfo.getUserId()</code>)</td></tr>
+              <tr><td><code>WhatId</code></td><td>Opportunity Id</td></tr>
+              <tr><td><code>Type</code></td><td>Matches Request Type selected</td></tr>
+            </tbody>
+          </table>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:36px;margin-bottom:8px">Picklists</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px">
+            <div>
+              <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px">Request Type (14)</p>
+              <div class="pills">
+                <span class="pill">Biz Dev/Channel</span>
+                <span class="pill">CSM Activity</span>
+                <span class="pill">Demo Request</span>
+                <span class="pill">Discovery Call</span>
+                <span class="pill">Document Request</span>
+                <span class="pill">On-Site Meeting</span>
+                <span class="pill">Pro Serv Scoping</span>
+                <span class="pill">RFX/Tender</span>
+                <span class="pill">Security Questionnaire</span>
+                <span class="pill">Security Team Escalation</span>
+                <span class="pill">Strategic Planning</span>
+                <span class="pill">Technical Call</span>
+                <span class="pill">Training</span>
+                <span class="pill">Trial Engagement/POC</span>
+              </div>
+            </div>
+            <div>
+              <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px">Product Line (17)</p>
+              <div class="pills">
+                <span class="pill">Central</span>
+                <span class="pill">EnhancedAudio</span>
+                <span class="pill">GoTo Resolve</span>
+                <span class="pill">GoToAssist</span>
+                <span class="pill">GoToConnect</span>
+                <span class="pill">GoToMeeting</span>
+                <span class="pill">GoToMyPC</span>
+                <span class="pill">GoToRoom</span>
+                <span class="pill">GoToTraining</span>
+                <span class="pill">GoToWebcast</span>
+                <span class="pill">GoToWebinar</span>
+                <span class="pill">ITSG</span>
+                <span class="pill">MDM</span>
+                <span class="pill">None</span>
+                <span class="pill">Pro</span>
+                <span class="pill">Rescue</span>
+                <span class="pill">UCC</span>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:12px">A dev ticket is required to add new picklist values after deployment.</p>
+        </div>
+      </section>
+
+      <!-- 11. SC Selection Logic -->
+      <section id="sc-selection-logic" class="section">
+        <div class="section-inner">
+          <span class="section-label">Technical Reference</span>
+          <h1>SC Selection Logic</h1>
+          <p class="lead">On modal load, the LWC queries <code>SC_Pairing__c</code> for the current user and handles four scenarios.</p>
+
+          <div class="scenarios">
+            <div class="scenario">
+              <div class="scenario-trigger s-green">Scenario 1 — Normal</div>
+              <h4>Exactly one active pairing found</h4>
+              <p>SC field is auto-populated with the paired SC. AE can still override via dropdown at any time. No warning shown.</p>
+            </div>
+            <div class="scenario">
+              <div class="scenario-trigger s-amber">Scenario 2 — Data Integrity Issue</div>
+              <h4>Multiple active pairings found for this AE</h4>
+              <p>Use the most recently created record (<code>CreatedDate DESC</code>). Show an inline warning: <em>"Multiple active SC pairings found — please verify the SC selected is correct."</em> Automatically email the SC's manager (<code>SC.ManagerId</code>) to clean up the duplicate records.</p>
+            </div>
+            <div class="scenario">
+              <div class="scenario-trigger s-muted">Scenario 3 — No Pairing</div>
+              <h4>No active pairing found</h4>
+              <p>SC field defaults to a full dropdown of all active SCs with no pre-selection. AE must manually choose.</p>
+            </div>
+            <div class="scenario">
+              <div class="scenario-trigger s-blue">Scenario 4 — Override</div>
+              <h4>AE overrides the auto-populated SC</h4>
+              <p>Available at any time regardless of which scenario applied. AE selects any active SC from the dropdown. Calendar availability re-queries automatically for the newly selected SC.</p>
+            </div>
+          </div>
+
+          <div class="info-callout" style="margin-top:28px">
+            <div class="info-callout-label">Important — One SC can have many AEs</div>
+            <div class="info-callout-body">One SC being paired to multiple AEs is normal and expected. The constraint is one-directional: one AE should not have more than one <em>active</em> SC pairing at the same time. The validation rule on <code>SC_Pairing__c</code> enforces this.</div>
+          </div>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:36px;margin-bottom:12px">SOQL Query</h2>
+          <div class="code-block"><span class="keyword">SELECT</span> SC__c, SC__r.Name, SC__r.ManagerId, CreatedDate
+<span class="keyword">FROM</span>   SC_Pairing__c
+<span class="keyword">WHERE</span>  AE__c = :UserInfo.getUserId()
+  <span class="keyword">AND</span>  Active__c = <span class="keyword">true</span>
+<span class="keyword">ORDER BY</span> CreatedDate <span class="keyword">DESC</span>
+<span class="keyword">LIMIT</span>  2 <span class="comment">-- LIMIT 2 lets us detect the duplicate case without fetching all</span></div>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:36px;margin-bottom:12px">Validation Rule — One Active Pairing Per AE</h2>
+          <div class="code-block"><span class="comment">/* SC_Pairing__c — One_Active_Pairing_Per_AE */</span>
+AND(
+  Active__c = TRUE,
+  VLOOKUP(
+    $ObjectType.SC_Pairing__c.Fields.Id,
+    $ObjectType.SC_Pairing__c.Fields.AE__c,
+    AE__c
+  ) &lt;&gt; Id
+)
+
+<span class="comment">Error: "This AE already has an active SC pairing.
+Deactivate the existing pairing before creating a new one."</span></div>
+        </div>
+      </section>
+
+      <!-- 12. M365 Integration Details -->
+      <section id="m365-details" class="section">
+        <div class="section-inner">
+          <span class="section-label">Technical Reference</span>
+          <h1>M365 Calendar Integration</h1>
+          <p class="lead">The integration uses Microsoft Graph API free/busy endpoint via a Salesforce Named Credential with per-user OAuth.</p>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:32px;margin-bottom:16px">API Endpoints Used</h2>
+          <table class="data-table">
+            <thead><tr><th>Endpoint</th><th>Method</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>https://graph.microsoft.com/v1.0/me/calendarView/getSchedule</code></td><td>POST</td><td>Query free/busy for AE + SC simultaneously</td></tr>
+              <tr><td><code>https://graph.microsoft.com/v1.0/me/events</code></td><td>POST</td><td>Create Outlook calendar event (when invite checkbox is checked)</td></tr>
+            </tbody>
+          </table>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:32px;margin-bottom:12px">OAuth Scopes Required</h2>
+          <div class="pills">
+            <span class="pill" style="background:#f0fdf4;border-color:#86efac;color:var(--green)">Calendars.Read — free/busy query</span>
+            <span class="pill" style="background:#fff7ed;border-color:#fdba74;color:var(--amber)">Calendars.ReadWrite — create Outlook invite</span>
+          </div>
+          <p style="font-size:13px;color:var(--text-muted);margin-top:10px">IT team to confirm whether the existing SSO / App Registration can be extended to cover these scopes, or whether a new App Registration is needed. This is the one open question remaining before development can begin.</p>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:32px;margin-bottom:16px">Named Credential Configuration</h2>
+          <table class="data-table">
+            <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Label</td><td>M365 Graph API</td></tr>
+              <tr><td>Name</td><td><code>M365_Graph_API</code></td></tr>
+              <tr><td>URL</td><td><code>https://graph.microsoft.com</code></td></tr>
+              <tr><td>Identity Type</td><td>Named User (per-user OAuth — each user authenticates individually)</td></tr>
+              <tr><td>Auth Protocol</td><td>OAuth 2.0</td></tr>
+              <tr><td>Auth Provider</td><td>M365 Connected App (Azure AD App Registration)</td></tr>
+            </tbody>
+          </table>
+
+          <div class="info-callout" style="margin-top:16px">
+            <div class="info-callout-label">Per-User Auth Onboarding</div>
+            <div class="info-callout-body">Because the Named Credential uses NamedUser principal type, each Salesforce user must authenticate with their Microsoft account once before they can use the calendar feature. The LWC detects if authentication is missing and prompts the user to complete the OAuth flow. This is a one-time step per user.</div>
+          </div>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:32px;margin-bottom:16px">Calendar Display Rules</h2>
+          <table class="data-table">
+            <thead><tr><th>Rule</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Default view</td><td>Next 5 open slots that work for both AE and SC</td></tr>
+              <tr><td>Business hours</td><td>8:00 AM – 6:00 PM in the Salesforce org's configured timezone</td></tr>
+              <tr><td>Business days</td><td>Monday – Friday only</td></tr>
+              <tr><td>Default duration</td><td>1 hour (radio buttons: 30 min / 1 hour / 90 min)</td></tr>
+              <tr><td>Timezone handling</td><td>Org timezone for both AE and SC. Cross-timezone per-user support deferred to future iteration.</td></tr>
+              <tr><td>SC change</td><td>Calendar re-queries automatically when AE overrides SC selection</td></tr>
+            </tbody>
+          </table>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:32px;margin-bottom:16px">Outlook Invite Behavior</h2>
+          <table class="data-table">
+            <thead><tr><th>State</th><th>Behavior</th></tr></thead>
+            <tbody>
+              <tr><td>Checkbox default</td><td>Checked (opt-out model). Most requests won't have a pre-existing invite.</td></tr>
+              <tr><td>If checked on submit</td><td>M365 integration creates an Outlook calendar event for both AE and SC with meeting details and a link to the Salesforce Opportunity. SC receives an Outlook invite to accept or decline.</td></tr>
+              <tr><td>If unchecked</td><td>No Outlook invite sent. AE handles calendar coordination. Salesforce Event record is still created regardless.</td></tr>
+            </tbody>
+          </table>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:32px;margin-bottom:16px">Error &amp; Fallback Handling</h2>
+          <div class="scenarios">
+            <div class="scenario">
+              <div class="scenario-trigger s-amber">M365 API unavailable</div>
+              <h4>Calendar availability is currently unavailable</h4>
+              <p>Inline error shown. AE can still manually enter a date and time and proceed with submission. Form is never blocked.</p>
+            </div>
+            <div class="scenario">
+              <div class="scenario-trigger s-amber">Zero open slots in next 5 business days</div>
+              <h4>"No mutual availability found in the next 5 days"</h4>
+              <p>Prompt shown. AE can use the date picker to check specific dates, or enter a time manually.</p>
+            </div>
+            <div class="scenario">
+              <div class="scenario-trigger s-muted">Manual entry fallback</div>
+              <h4>Always available regardless of API status</h4>
+              <p>A manual date/time input is always present in the form as a fallback. No dependency on M365 availability to complete a request.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 13. Scope & Boundaries -->
+      <section id="scope" class="section">
+        <div class="section-inner">
+          <span class="section-label">Technical Reference</span>
+          <h1>Scope &amp; Boundaries</h1>
+          <p class="lead">What this project builds, what it intentionally does not build, and what remains open before development starts.</p>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:32px;margin-bottom:12px">In Scope</h2>
+          <ul class="scope-list">
+            <li>SC_Pairing__c custom object with validation rule (one active pairing per AE)</li>
+            <li>SC_Request__c custom object (9 fields, Master-Detail to Opportunity)</li>
+            <li>SC_Request_Notes__c new field on Opportunity</li>
+            <li>scRequestModal LWC — 3-step modal form launched from existing Quick Action</li>
+            <li>ScRequestController Apex — all DML in single transaction with Savepoint/rollback</li>
+            <li>M365CalendarService Apex — free/busy query + optional Outlook invite creation</li>
+            <li>Named Credential + Auth Provider for M365 Graph API (per-user OAuth)</li>
+            <li>Record-Triggered Flow on SC_Request__c insert — sends 4 email alerts</li>
+            <li>HTML email template with 3 Salesforce deep-link CTA buttons</li>
+            <li>Opportunity layout updates: add SC_Request_Notes__c to Sales Engineering Info, add SC_Request__c related list to Related tab</li>
+            <li>Full Apex test coverage (TestDataFactory, M365CalendarMock, test classes for all Apex)</li>
+            <li>Jest unit tests for scRequestModal LWC</li>
+          </ul>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:36px;margin-bottom:12px">Out of Scope</h2>
+          <ul class="scope-list">
+            <li>Customer-facing calendar invites — AE handles separately</li>
+            <li>Pre_Sales_Stage__c — managed independently, not touched</li>
+            <li>SC_Notes__c — SC-owned field, never overwritten</li>
+            <li>SC confirmation/acceptance workflow — future consideration</li>
+            <li>Cross-timezone calendar display — availability shown in org timezone for both users. Full per-user timezone support is a future iteration.</li>
+            <li>Secondary Product field — removed from process entirely</li>
+            <li>Requester location — removed from email, not tracked</li>
+          </ul>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:36px;margin-bottom:12px">Open Questions</h2>
+          <ul class="questions">
+            <li class="open">
+              <span class="q-icon">⏳</span>
+              <div class="q-body">
+                <strong>M365 OAuth Ownership</strong>
+                <span>IT team to confirm whether the existing SSO / App Registration can be extended to cover <code>Calendars.Read</code> and <code>Calendars.ReadWrite</code> scopes, or whether a new App Registration is needed. This is the only remaining blocker before development begins.</span>
+              </div>
+            </li>
+          </ul>
+
+          <h2 style="font-size:18px;font-weight:700;margin-top:32px;margin-bottom:12px">Resolved</h2>
+          <ul class="questions">
+            <li class="resolved"><span class="q-icon">✅</span><div class="q-body"><strong>Request Type full list</strong><span>14 values confirmed — see Field Reference section.</span></div></li>
+            <li class="resolved"><span class="q-icon">✅</span><div class="q-body"><strong>Product Line full list</strong><span>17 values confirmed — see Field Reference section.</span></div></li>
+            <li class="resolved"><span class="q-icon">✅</span><div class="q-body"><strong>OpportunityTeamMember access level</strong><span>Read/Write confirmed.</span></div></li>
+            <li class="resolved"><span class="q-icon">✅</span><div class="q-body"><strong>Email template format</strong><span>HTML template with GoTo brand header, 2-column grid, 3 CTA buttons, recipient footer.</span></div></li>
+            <li class="resolved"><span class="q-icon">✅</span><div class="q-body"><strong>Default meeting duration</strong><span>1 hour confirmed.</span></div></li>
+            <li class="resolved"><span class="q-icon">✅</span><div class="q-body"><strong>Outlook invite model</strong><span>Opt-out (checked by default). AE unchecks if call already scheduled.</span></div></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 14. Implementation Plan -->
+      <section id="impl-plan" class="section">
+        <div class="section-inner">
+          <span class="section-label">Technical Reference</span>
+          <h1>Implementation Plan</h1>
+          <p class="lead">10 tasks across 4 chunks. Each chunk is independently deployable and testable. Full plan with step-by-step instructions and code is in the repo at <code>docs/superpowers/plans/2026-03-16-salesforce-option-a.md</code>.</p>
+
+          <div class="chunks">
+            <div class="chunk">
+              <div class="chunk-header">
+                <div class="chunk-num">1</div>
+                <div class="chunk-title">Custom Objects &amp; Fields</div>
+              </div>
+              <div class="chunk-body">
+                <ul class="chunk-tasks">
+                  <li>Task 1 — Create SC_Pairing__c object: 3 fields (AE__c, SC__c, Active__c) + validation rule</li>
+                  <li>Task 2 — Create SC_Request__c object: 9 fields including Master-Detail, picklists, formula</li>
+                  <li>Task 3 — Add SC_Request_Notes__c Long Text Area field to Opportunity</li>
+                </ul>
+                <div class="chunk-files">
+                  <div class="chunk-files-label">Key files</div>
+                  <code>force-app/main/default/objects/SC_Pairing__c/</code>
+                  <code>force-app/main/default/objects/SC_Request__c/</code>
+                  <code>force-app/main/default/objects/Opportunity/fields/SC_Request_Notes__c.field-meta.xml</code>
+                </div>
+              </div>
+            </div>
+
+            <div class="chunk">
+              <div class="chunk-header">
+                <div class="chunk-num">2</div>
+                <div class="chunk-title">Apex Backend</div>
+              </div>
+              <div class="chunk-body">
+                <ul class="chunk-tasks">
+                  <li>Task 4 — ScRequestController: getAssignedSC (with duplicate-pairing manager email), getAllActiveSCs, submitRequest (Savepoint/rollback, all 5 DML operations)</li>
+                  <li>Task 5 — M365CalendarService: getAvailableSlots, createCalendarEvent, parseAvailableSlots + TestDataFactory + M365CalendarMock</li>
+                </ul>
+                <div class="chunk-files">
+                  <div class="chunk-files-label">Key files</div>
+                  <code>force-app/main/default/classes/ScRequestController.cls</code>
+                  <code>force-app/main/default/classes/M365CalendarService.cls</code>
+                  <code>force-app/main/default/classes/TestDataFactory.cls</code>
+                  <code>force-app/main/default/classes/M365CalendarMock.cls</code>
+                  <code>force-app/main/default/classes/ScRequestControllerTest.cls</code>
+                  <code>force-app/main/default/classes/M365CalendarServiceTest.cls</code>
+                </div>
+              </div>
+            </div>
+
+            <div class="chunk">
+              <div class="chunk-header">
+                <div class="chunk-num">3</div>
+                <div class="chunk-title">Lightning Web Component</div>
+              </div>
+              <div class="chunk-body">
+                <ul class="chunk-tasks">
+                  <li>Task 6 — scRequestModal LWC: 3-step form (SC + calendar, request details, review + submit), calendar availability panel, slot selection, duration radio buttons, Outlook invite checkbox</li>
+                  <li>Task 7 — scRequestAction wrapper LWC: Quick Action entry point, calls notifyRecordUpdateAvailable on close to refresh Opportunity</li>
+                </ul>
+                <div class="chunk-files">
+                  <div class="chunk-files-label">Key files</div>
+                  <code>force-app/main/default/lwc/scRequestModal/</code>
+                  <code>force-app/main/default/lwc/scRequestAction/</code>
+                  <code>force-app/main/default/lwc/scRequestModal/__tests__/scRequestModal.test.js</code>
+                </div>
+              </div>
+            </div>
+
+            <div class="chunk">
+              <div class="chunk-header">
+                <div class="chunk-num">4</div>
+                <div class="chunk-title">Email Flow, Named Credential &amp; Layout</div>
+              </div>
+              <div class="chunk-body">
+                <ul class="chunk-tasks">
+                  <li>Task 8 — Record-Triggered Flow on SC_Request__c insert: 4 Send Email actions (AE, SC, AE Manager via AE.ManagerId, SC Manager via SC.ManagerId). HTML email template with GoTo brand header, 2-column details card, 3 CTA deep-link buttons, recipient footer.</li>
+                  <li>Task 9 — Named Credential M365_Graph_API: NamedUser principal type, OAuth 2.0, Auth Provider setup + per-user onboarding instructions</li>
+                  <li>Task 10 — Opportunity layout updates: add SC_Request_Notes__c to Sales Engineering Info section, add SC_Request__c related list to Related tab. Deploy and smoke-test full end-to-end flow.</li>
+                </ul>
+                <div class="chunk-files">
+                  <div class="chunk-files-label">Key files</div>
+                  <code>force-app/main/default/flows/SC_Request_Email_Notification.flow-meta.xml</code>
+                  <code>force-app/main/default/emailTemplates/SC_Request_Notification.email-meta.xml</code>
+                  <code>force-app/main/default/namedCredentials/M365_Graph_API.namedCredential-meta.xml</code>
+                  <code>force-app/main/default/authproviders/M365_Auth_Provider.authprovider-meta.xml</code>
+                  <code>force-app/main/default/layouts/Opportunity-Sales Layout.layout-meta.xml</code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="callout-yellow" style="margin-top:32px">
+            <div class="callout-yellow-label">Full Plan Location</div>
+            <div class="callout-yellow-body">Complete step-by-step instructions including all XML metadata, Apex code, Jest tests, and deployment commands are in: <code>docs/superpowers/plans/2026-03-16-salesforce-option-a.md</code></div>
           </div>
         </div>
       </section>
