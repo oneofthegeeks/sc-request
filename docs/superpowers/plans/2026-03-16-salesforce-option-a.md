@@ -505,6 +505,7 @@ private class ScRequestControllerTest {
         input.productLine = 'GoToConnect';
         input.requestNotes = 'Demo notes';
         input.meetingDate = Datetime.now().addDays(2);
+        input.durationMinutes = 60;
         input.sendCalendarInvite = false;
 
         Test.startTest();
@@ -711,7 +712,7 @@ public with sharing class ScRequestController {
                 M365CalendarService.createCalendarEvent(
                     input.scId, UserInfo.getUserId(),
                     eventSubject, input.requestNotes,
-                    input.meetingDate, input.meetingDate.addHours(1)
+                    input.meetingDate, input.meetingDate.addMinutes(duration)
                 );
             }
 
@@ -1693,15 +1694,15 @@ Expected: All 3 tests PASS.
 sf project deploy start --source-dir force-app/main/default/lwc/scRequestAction
 ```
 
-- [ ] **Step 3: Replace Quick Action target in Salesforce Setup**
+- [ ] **Step 5: Replace Quick Action target in Salesforce Setup**
 
 In Salesforce Setup → Object Manager → Opportunity → Buttons, Links, and Actions → find "Request SC" → Edit → change Action Type to "LWC" → select `scRequestAction` → Save.
 
-- [ ] **Step 4: Verify in scratch org**
+- [ ] **Step 6: Verify in scratch org**
 
 Open an Opportunity record → click the action bar overflow `▼` → click "Request SC" → verify the modal opens with Step 1 showing SC pre-populated.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add force-app/
@@ -1719,16 +1720,90 @@ git commit -m "feat: wire scRequestAction LWC to existing Request SC quick actio
 
 - [ ] **Step 1: Create HTML email template in Salesforce Setup**
 
-In Salesforce Setup → Classic Email Templates → New Template:
-- Folder: SC Request Templates (create if needed)
+In Salesforce Setup → Classic Email Templates → New Template → HTML with Letterhead (or Custom HTML):
+- Folder: SC Request Templates (create folder first if needed)
 - Name: `SC Request Notification`
 - Subject: `New SC Request: {!SC_Request__c.Opportunity__r.Account.Name} — {!SC_Request__c.Request_Type__c}`
-- HTML body (use the design from the spec — see `docs/superpowers/specs/2026-03-16-sc-request-design.md` Notifications section):
-  - GoTo blue header banner
-  - Two-column key details grid
-  - Notes section with amber left border
-  - Three CTA buttons (Opportunity, SC Request, Event links)
-  - Recipient footer
+
+Paste the following HTML as the template body:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; color: #1a1a2e; margin: 0; padding: 0; }
+  .header { background: #0070d2; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  .header-badge { background: #fff; color: #0070d2; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+  .header-title { color: #fff; font-size: 15px; font-weight: 600; }
+  .body { padding: 24px; }
+  .meta { font-size: 13px; color: #6b7280; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; background: #f4f6f9; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
+  .field-label { font-size: 11px; text-transform: uppercase; color: #888; font-weight: 600; margin-bottom: 3px; }
+  .field-value { font-size: 13px; font-weight: 600; }
+  .field-value.link { color: #0070d2; }
+  .field-value.date { color: #c23934; }
+  .notes-label { font-size: 11px; text-transform: uppercase; color: #888; font-weight: 600; margin-bottom: 8px; }
+  .notes-body { background: #fffbf0; border-left: 3px solid #d97706; padding: 12px 16px; border-radius: 0 6px 6px 0; font-size: 13px; line-height: 1.6; color: #333; margin-bottom: 20px; }
+  .actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .btn { padding: 9px 16px; border-radius: 5px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-block; }
+  .btn-primary { background: #0070d2; color: #fff; }
+  .btn-secondary { background: #fff; color: #0070d2; border: 1.5px solid #0070d2; }
+  .footer { border-top: 1px solid #e5e7eb; padding-top: 14px; font-size: 12px; color: #888; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <span class="header-badge">SC REQUEST</span>
+    <span class="header-title">A New SC Request Has Been Submitted</span>
+  </div>
+  <div class="body">
+    <p class="meta">Submitted by <strong>{!SC_Request__c.Submitted_By__r.Name}</strong> on <strong>{!SC_Request__c.Submitted_Date__c}</strong></p>
+    <div class="grid">
+      <div>
+        <div class="field-label">Opportunity</div>
+        <div class="field-value link">{!SC_Request__c.Opportunity__r.Name}</div>
+      </div>
+      <div>
+        <div class="field-label">Primary Contact</div>
+        <div class="field-value">{!SC_Request__c.Opportunity__r.Primary_Contact__r.Name}</div>
+      </div>
+      <div>
+        <div class="field-label">Request Type</div>
+        <div class="field-value">{!SC_Request__c.Request_Type__c}</div>
+      </div>
+      <div>
+        <div class="field-label">Product Line</div>
+        <div class="field-value">{!SC_Request__c.Product_Line__c}</div>
+      </div>
+      <div>
+        <div class="field-label">Assigned SC</div>
+        <div class="field-value">{!SC_Request__c.Requested_SC__r.Name}</div>
+      </div>
+      <div>
+        <div class="field-label">Meeting Date &amp; Time</div>
+        <div class="field-value date">{!SC_Request__c.Meeting_Date__c}</div>
+      </div>
+    </div>
+    <div class="notes-label">What does the customer want to achieve / solve?</div>
+    <div class="notes-body">{!SC_Request__c.Request_Notes__c}</div>
+    <div class="actions">
+      <a href="{!URLFOR($Site.BaseUrl, SC_Request__c.Opportunity__r.Id)}" class="btn btn-primary">View Opportunity →</a>
+      <a href="{!URLFOR($Site.BaseUrl, SC_Request__c.Id)}" class="btn btn-secondary">View SC Request →</a>
+    </div>
+    <div class="footer">
+      Sent to: <strong>{!SC_Request__c.Requested_SC__r.Name}</strong> (SC) ·
+      <strong>{!SC_Request__c.Submitted_By__r.Name}</strong> (AE) ·
+      <strong>{!SC_Request__c.Submitted_By__r.Manager.Name}</strong> (AE Manager) ·
+      <strong>{!SC_Request__c.Requested_SC__r.Manager.Name}</strong> (SC Manager)
+    </div>
+  </div>
+</body>
+</html>
+```
+
+> **Note:** `Primary_Contact__r` uses whatever the field API name is in your org for the Opportunity's primary contact lookup. Confirm with your Salesforce admin — common values are `Primary_Contact__c` or the standard `ContactId` via a related junction. Adjust the merge field if needed.
 
 Note the Template ID after saving — you'll need it in the Flow.
 
@@ -1880,7 +1955,7 @@ In Salesforce Setup → Object Manager → Opportunity → Page Layouts → open
 
 - [ ] **Step 2: Add SC Requests related list**
 
-In the same page layout editor → Related Lists tab → drag `SC Requests` (from `SC_Request__c`) onto the Related Lists section → configure columns: Request Name, Request Type, Product Line, Meeting Date, Requested SC → Save.
+In the same page layout editor → Related Lists tab → drag `SC Requests` (from `SC_Request__c`) onto the Related Lists section → configure columns: Request Name, Request Type, Product Line, Meeting Date, Requested SC, Status → Save.
 
 - [ ] **Step 3: Retrieve layout metadata for source control**
 
