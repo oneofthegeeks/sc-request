@@ -12,8 +12,10 @@
     <!-- Sidebar nav -->
     <nav class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo">GoTo</div>
-        <div class="sidebar-title">SC Request Redesign</div>
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-wordmark">Go<span>To</span></div>
+        </div>
+        <div class="sidebar-subtitle">SC Request Redesign</div>
       </div>
       <ul class="nav-list" id="nav-list">
         <li><a href="#problem" class="nav-link active">The Problem</a></li>
@@ -89,9 +91,9 @@
               <p>Every SC request is stored as a structured record on the Opportunity — reportable, searchable, always accessible.</p>
             </div>
           </div>
-          <div style="margin-top:40px;padding:24px;background:var(--blue-light);border-radius:var(--radius);border-left:4px solid var(--blue)">
-            <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:8px">Zero Retraining Required</p>
-            <p style="font-size:15px;color:var(--text)">The entry point stays exactly the same — "Request SC" in the Opportunity action bar. AEs don't need to learn anything new about where to find it.</p>
+          <div class="callout-yellow">
+            <div class="callout-yellow-label">Zero Retraining Required</div>
+            <div class="callout-yellow-body">The entry point stays exactly the same — "Request SC" in the Opportunity action bar. AEs don't need to learn anything new about where to find it.</div>
           </div>
         </div>
       </section>
@@ -177,9 +179,9 @@
               <p>After picking a slot, the AE can choose to auto-send an Outlook calendar invite to the SC. Opt-out if already scheduled.</p>
             </div>
           </div>
-          <div style="margin-top:32px;padding:20px 24px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)">
-            <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px">If calendar is unavailable</p>
-            <p style="font-size:14px;color:var(--text);line-height:1.7">The form never blocks submission. If the Microsoft 365 API is unavailable or no slots are found, the AE can always enter a date and time manually and proceed.</p>
+          <div class="info-callout">
+            <div class="info-callout-label">If calendar is unavailable</div>
+            <div class="info-callout-body">The form never blocks submission. If the Microsoft 365 API is unavailable or no slots are found, the AE can always enter a date and time manually and proceed.</div>
           </div>
         </div>
       </section>
@@ -226,9 +228,9 @@
               </tr>
             </tbody>
           </table>
-          <div style="margin-top:32px;padding:20px 24px;background:#f0fdf4;border-radius:var(--radius);border-left:4px solid var(--green)">
-            <p style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:6px">SC Pairing — No More Spreadsheet</p>
-            <p style="font-size:14px;color:var(--text);line-height:1.7">SC managers maintain AE→SC assignments directly in Salesforce via a simple list view. One SC can be assigned to many AEs. Changes take effect immediately — no import required after initial setup.</p>
+          <div class="success-callout">
+            <div class="success-callout-label">SC Pairing — No More Spreadsheet</div>
+            <div class="success-callout-body">SC managers maintain AE→SC assignments directly in Salesforce via a simple list view. One SC can be assigned to many AEs. Changes take effect immediately — no import required after initial setup.</div>
           </div>
         </div>
       </section>
@@ -316,7 +318,7 @@
             <thead>
               <tr>
                 <th>Criterion</th>
-                <th>⭐ Option A — Salesforce Native</th>
+                <th>Option A — Salesforce Native</th>
                 <th>Option C — Slack Workflow</th>
               </tr>
             </thead>
@@ -358,9 +360,9 @@
               </tr>
             </tbody>
           </table>
-          <div style="margin-top:32px;padding:24px;background:var(--blue-light);border-radius:var(--radius);border-left:4px solid var(--blue)">
-            <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:8px">⭐ Recommendation: Option A — Salesforce Native</p>
-            <p style="font-size:15px;color:var(--text);line-height:1.7">AEs already live in Salesforce. Keeping everything native means no context-switching, no extra systems to maintain, and no new IT approvals. The higher build complexity is a one-time cost — the long-term simplicity is worth it.</p>
+          <div class="rec-block">
+            <div class="rec-block-label">Recommendation: Option A — Salesforce Native</div>
+            <div class="rec-block-body">AEs already live in Salesforce. Keeping everything native means no context-switching, no extra systems to maintain, and no new IT approvals. The higher build complexity is a one-time cost — the long-term simplicity is worth it.</div>
           </div>
         </div>
       </section>
@@ -401,9 +403,9 @@
               </div>
             </div>
           </div>
-          <div style="margin-top:48px;padding:32px;background:var(--text);border-radius:var(--radius);text-align:center">
-            <p style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:8px">Questions or feedback?</p>
-            <p style="color:#fff;font-size:18px;font-weight:600">Let's make the SC request process work the way it should.</p>
+          <div class="closing-cta">
+            <p class="closing-cta-sub">Questions or feedback?</p>
+            <p class="closing-cta-main">Let's make the SC request process <em>work the way it should.</em></p>
           </div>
         </div>
       </section>

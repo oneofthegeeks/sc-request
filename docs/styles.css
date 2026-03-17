@@ -1,16 +1,25 @@
+/* ── Fonts ────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
+
 /* ── Reset & base ─────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
   --sidebar-width: 260px;
+  /* GoTo brand colors */
+  --goto-yellow: #FFE900;
+  --goto-yellow-dark: #E6D200;
+  --goto-black: #0d0d0d;
+  --goto-dark: #1a1a1a;
+  /* Salesforce blue — kept for email mockup */
   --blue: #0070d2;
-  --blue-dark: #005fb2;
   --blue-light: #e8f4fd;
-  --text: #1a1a2e;
+  /* UI colors */
+  --text: #1a1a1a;
   --text-muted: #6b7280;
   --border: #e5e7eb;
   --bg: #ffffff;
-  --section-bg-alt: #f8fafc;
+  --section-bg-alt: #f9f9f7;
   --green: #059669;
   --amber: #d97706;
   --red: #dc2626;
@@ -19,7 +28,7 @@
 }
 
 html { scroll-behavior: smooth; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--text); background: var(--bg); }
+body { font-family: 'Figtree', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--text); background: var(--bg); }
 
 /* ── Layout ───────────────────────────────── */
 .layout { display: flex; min-height: 100vh; }
@@ -27,7 +36,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; c
 /* ── Sidebar ──────────────────────────────── */
 .sidebar {
   width: var(--sidebar-width);
-  background: var(--text);
+  background: var(--goto-black);
   position: fixed;
   top: 0; left: 0; bottom: 0;
   display: flex; flex-direction: column;
@@ -39,22 +48,46 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; c
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .sidebar-logo {
-  font-size: 11px; font-weight: 700; letter-spacing: 2px;
-  text-transform: uppercase; color: var(--blue); margin-bottom: 8px;
+  display: flex; align-items: center;
+  margin-bottom: 14px;
 }
-.sidebar-title {
-  font-size: 14px; font-weight: 600; color: #fff; line-height: 1.4;
+.sidebar-logo-wordmark {
+  font-family: 'Figtree', sans-serif;
+  font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
+  color: #fff; line-height: 1;
+  position: relative;
+}
+/* Yellow underline accent under the "o" in GoTo — mimics goto.com logo style */
+.sidebar-logo-wordmark span {
+  position: relative;
+}
+.sidebar-logo-wordmark span::after {
+  content: '';
+  position: absolute; bottom: -3px; left: 0; right: 0;
+  height: 3px; background: var(--goto-yellow); border-radius: 2px;
+}
+.sidebar-subtitle {
+  font-size: 11px; font-weight: 500;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  line-height: 1.4;
 }
 .nav-list { list-style: none; padding: 16px 0; }
 .nav-list li { margin: 2px 0; }
 .nav-link {
   display: block; padding: 10px 20px;
-  color: rgba(255,255,255,0.6); text-decoration: none;
+  color: rgba(255,255,255,0.5); text-decoration: none;
   font-size: 13px; font-weight: 500;
   transition: all 0.15s; border-left: 3px solid transparent;
+  border-radius: 0;
 }
 .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
-.nav-link.active { color: #fff; border-left-color: var(--blue); background: rgba(0,112,210,0.15); }
+.nav-link.active {
+  color: var(--goto-black);
+  background: var(--goto-yellow);
+  border-left-color: var(--goto-yellow-dark);
+  font-weight: 600;
+}
 
 /* ── Content ──────────────────────────────── */
 .content { margin-left: var(--sidebar-width); flex: 1; }
@@ -63,43 +96,114 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; c
 .section { min-height: 100vh; display: flex; align-items: center; border-bottom: 1px solid var(--border); }
 .section:nth-child(even) { background: var(--section-bg-alt); }
 .section-inner { max-width: 860px; padding: 80px 60px; width: 100%; }
+
 .section-label {
-  display: inline-block; font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700;
   letter-spacing: 2px; text-transform: uppercase;
-  color: var(--blue); margin-bottom: 16px;
+  color: var(--text-muted); margin-bottom: 16px;
 }
-.section-inner h1 { font-size: 42px; font-weight: 700; line-height: 1.15; margin-bottom: 20px; color: var(--text); }
+.section-label::before {
+  content: '';
+  display: inline-block; width: 18px; height: 3px;
+  background: var(--goto-yellow); border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.section-inner h1 {
+  font-size: 42px; font-weight: 700; line-height: 1.15;
+  margin-bottom: 20px; color: var(--text); letter-spacing: -0.5px;
+}
 .lead { font-size: 18px; color: var(--text-muted); line-height: 1.7; max-width: 600px; }
 
 /* ── Cards ────────────────────────────────── */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 32px; }
-.card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
+.card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
 .card-icon { font-size: 28px; margin-bottom: 12px; }
 .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
 .card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
 
+/* ── Yellow callout (GoTo brand) ──────────── */
+.callout-yellow {
+  margin-top: 40px; padding: 22px 24px;
+  background: var(--goto-yellow); border-radius: var(--radius);
+}
+.callout-yellow-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.5px; color: rgba(0,0,0,0.5); margin-bottom: 6px;
+}
+.callout-yellow-body { font-size: 15px; color: var(--goto-black); line-height: 1.6; font-weight: 500; }
+
+/* ── Info callout (white card) ────────────── */
+.info-callout {
+  margin-top: 32px; padding: 20px 24px;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.info-callout-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; }
+.info-callout-body { font-size: 14px; color: var(--text); line-height: 1.7; }
+
+/* ── Success callout (green) ──────────────── */
+.success-callout {
+  margin-top: 32px; padding: 20px 24px;
+  background: #f0fdf4; border-radius: var(--radius);
+  border-left: 4px solid var(--green);
+}
+.success-callout-label { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 6px; }
+.success-callout-body { font-size: 14px; color: var(--text); line-height: 1.7; }
+
 /* ── Comparison table ─────────────────────── */
 .compare { width: 100%; border-collapse: collapse; margin-top: 32px; font-size: 14px; }
-.compare th { background: var(--text); color: #fff; padding: 12px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+.compare th {
+  background: var(--goto-black); color: #fff;
+  padding: 12px 16px; text-align: left;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+}
+.compare th:nth-child(2) {
+  background: var(--goto-yellow); color: var(--goto-black);
+}
 .compare td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
 .compare tr:last-child td { border-bottom: none; }
 .compare .yes { color: var(--green); font-weight: 600; }
 .compare .no { color: var(--red); font-weight: 600; }
 .compare .partial { color: var(--amber); font-weight: 600; }
-.compare .highlight { background: rgba(0,112,210,0.04); }
+.compare .highlight { background: #fffef0; }
+
+/* ── Recommendation block ─────────────────── */
+.rec-block {
+  margin-top: 32px; padding: 24px;
+  background: var(--goto-yellow); border-radius: var(--radius);
+}
+.rec-block-label {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: rgba(0,0,0,0.5); margin-bottom: 8px;
+}
+.rec-block-body { font-size: 15px; color: var(--goto-black); line-height: 1.7; font-weight: 500; }
 
 /* ── Step flow ────────────────────────────── */
 .steps { margin-top: 32px; display: flex; flex-direction: column; gap: 0; }
 .step { display: flex; gap: 20px; align-items: flex-start; padding: 20px 0; border-bottom: 1px solid var(--border); }
 .step:last-child { border-bottom: none; }
-.step-num { width: 36px; height: 36px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+.step-num {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--goto-yellow); color: var(--goto-black);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; flex-shrink: 0;
+}
 .step-body h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
 .step-body p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
-.step-auto .step-num { background: var(--green); }
+.step-auto .step-num {
+  background: var(--goto-black); color: var(--goto-yellow);
+}
 
 /* ── Badge ────────────────────────────────── */
 .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.badge-blue { background: var(--blue-light); color: var(--blue); }
+.badge-blue { background: #f0f7ff; color: var(--blue); border: 1px solid #cce0f5; }
 .badge-green { background: #d1fae5; color: var(--green); }
 .badge-amber { background: #fef3c7; color: var(--amber); }
 
@@ -119,7 +223,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; c
 .email-notes-label { font-size: 11px; text-transform: uppercase; color: #888; font-weight: 600; margin-bottom: 8px; }
 .email-notes-body { background: #fffbf0; border-left: 3px solid var(--amber); padding: 12px 16px; border-radius: 0 6px 6px 0; font-size: 13px; line-height: 1.6; color: #333; }
 .email-actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-.email-btn { padding: 9px 16px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; }
+.email-btn { padding: 9px 16px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; font-family: 'Figtree', sans-serif; }
 .email-btn-primary { background: var(--blue); color: #fff; }
 .email-btn-secondary { background: #fff; color: var(--blue); border: 1.5px solid var(--blue); }
 .email-footer { border-top: 1px solid var(--border); padding-top: 14px; font-size: 12px; color: #888; }
@@ -131,6 +235,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; c
 .data-table code { background: #f4f6f9; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; }
 .data-table .new { color: var(--blue); font-weight: 600; }
 .data-table .modified { color: var(--amber); font-weight: 600; }
+
+/* ── Closing CTA ──────────────────────────── */
+.closing-cta {
+  margin-top: 48px; padding: 36px;
+  background: var(--goto-black); border-radius: var(--radius);
+  text-align: center;
+}
+.closing-cta-sub { color: rgba(255,255,255,0.45); font-size: 13px; margin-bottom: 10px; }
+.closing-cta-main { color: #fff; font-size: 19px; font-weight: 600; line-height: 1.5; }
+.closing-cta-main em { color: var(--goto-yellow); font-style: normal; }
 
 /* ── Responsive ───────────────────────────── */
 @media (max-width: 768px) {
