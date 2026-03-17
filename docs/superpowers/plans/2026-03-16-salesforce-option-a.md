@@ -651,13 +651,22 @@ public with sharing class ScRequestController {
         Savepoint sp = Database.setSavepoint();
         try {
             Opportunity opp = [
-                SELECT Id, Name, Account.Name, OwnerId, Owner.ManagerId,
+                SELECT Id, Name, Account.Name, OwnerId, Owner.Name, Owner.ManagerId,
                        SC_On_Team__c, Demo__c, SC_Request_Notes__c,
                        Primary_Solution_Consultant__c, SC_Date_Requested__c
                 FROM Opportunity WHERE Id = :input.opportunityId
             ];
 
             User sc = [SELECT Id, Name, ManagerId FROM User WHERE Id = :input.scId];
+
+            // Fetch primary contact name for invite body (best-effort — empty string if none)
+            String primaryContactName = '';
+            List<OpportunityContactRole> ocrs = [
+                SELECT Contact.Name FROM OpportunityContactRole
+                WHERE OpportunityId = :input.opportunityId AND IsPrimary = true
+                LIMIT 1
+            ];
+            if (!ocrs.isEmpty()) primaryContactName = ocrs[0].Contact.Name;
 
             // 1. Create SC_Request__c
             SC_Request__c request = new SC_Request__c(
@@ -711,8 +720,12 @@ public with sharing class ScRequestController {
             if (input.sendCalendarInvite) {
                 M365CalendarService.createCalendarEvent(
                     input.scId, UserInfo.getUserId(),
-                    eventSubject, input.requestNotes,
-                    input.meetingDate, input.meetingDate.addMinutes(duration)
+                    eventSubject,
+                    input.requestNotes,
+                    input.meetingDate, input.meetingDate.addMinutes(duration),
+                    opp.Name, opp.Account.Name, opp.Owner.Name,
+                    sc.Name, input.requestType, input.productLine,
+                    primaryContactName, input.opportunityId
                 );
             }
 
@@ -803,7 +816,10 @@ private class M365CalendarServiceTest {
         Boolean result = M365CalendarService.createCalendarEvent(
             UserInfo.getUserId(), UserInfo.getUserId(),
             'Test Meeting', 'Test notes',
-            Datetime.now().addDays(2), Datetime.now().addDays(2).addHours(1)
+            Datetime.now().addDays(2), Datetime.now().addDays(2).addHours(1),
+            'Test Opp', 'Test Account', 'Test AE',
+            'Test SC', 'Demo Request', 'GoToConnect',
+            'Jane Smith', null
         );
         Test.stopTest();
 
@@ -921,14 +937,55 @@ public with sharing class M365CalendarService {
     public static Boolean createCalendarEvent(
         Id scUserId, Id aeUserId,
         String subject, String notes,
-        Datetime startDt, Datetime endDt
+        Datetime startDt, Datetime endDt,
+        String oppName, String accountName, String aeName,
+        String scName, String requestType, String productLine,
+        String primaryContact, Id opportunityId
     ) {
         String scEmail = getUserEmail(scUserId);
         String aeEmail = getUserEmail(aeUserId);
 
+        // Build Salesforce deep link to the Opportunity
+        String orgUrl = URL.getSalesforceBaseUrl().toExternalForm();
+        String oppUrl = orgUrl + '/' + opportunityId;
+
+        // Build HTML body matching the email notification format
+        String meetingTime = startDt.format('MMMM d, yyyy') + ' at ' + startDt.format('h:mm a');
+        String htmlBody =
+            '<div style="font-family:Arial,sans-serif;font-size:14px;color:#1a1a1a;max-width:600px">' +
+            '<div style="background:#0070d2;padding:16px 24px;display:flex;align-items:center;gap:12px">' +
+            '<span style="background:#fff;color:#0070d2;font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px">SC REQUEST</span>' +
+            '<span style="color:#fff;font-size:15px;font-weight:600">A New SC Request Has Been Submitted</span>' +
+            '</div>' +
+            '<div style="padding:20px 24px">' +
+            '<p style="margin:0 0 16px;color:#555;font-size:13px">Submitted by <strong>' + aeName + '</strong></p>' +
+            '<table style="width:100%;border-collapse:collapse;background:#f4f6f9;border-radius:8px;padding:12px" cellpadding="10">' +
+            '<tr><td style="width:50%;vertical-align:top"><div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600">Opportunity</div>' +
+            '<div style="font-weight:600"><a href="' + oppUrl + '" style="color:#0070d2">' + oppName + '</a></div></td>' +
+            '<td style="width:50%;vertical-align:top"><div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600">Account</div>' +
+            '<div style="font-weight:600">' + accountName + '</div></td></tr>' +
+            '<tr><td style="vertical-align:top"><div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600">Primary Contact</div>' +
+            '<div style="font-weight:600">' + (String.isBlank(primaryContact) ? '—' : primaryContact) + '</div></td>' +
+            '<td style="vertical-align:top"><div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600">Meeting Date &amp; Time</div>' +
+            '<div style="font-weight:600;color:#c23934">' + meetingTime + '</div></td></tr>' +
+            '<tr><td style="vertical-align:top"><div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600">Request Type</div>' +
+            '<div style="font-weight:600">' + requestType + '</div></td>' +
+            '<td style="vertical-align:top"><div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600">Product Line</div>' +
+            '<div style="font-weight:600">' + productLine + '</div></td></tr>' +
+            '<tr><td colspan="2" style="vertical-align:top"><div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600">Assigned SC</div>' +
+            '<div style="font-weight:600">' + scName + '</div></td></tr>' +
+            '</table>' +
+            '<div style="margin:16px 0">' +
+            '<div style="font-size:11px;text-transform:uppercase;color:#888;font-weight:600;margin-bottom:8px">Notes</div>' +
+            '<div style="background:#fffbf0;border-left:3px solid #d97706;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6;color:#333">' +
+            (String.isBlank(notes) ? '—' : notes.escapeHtml4()) +
+            '</div></div>' +
+            '<p><a href="' + oppUrl + '" style="background:#0070d2;color:#fff;padding:10px 18px;border-radius:5px;text-decoration:none;font-size:13px;font-weight:600">View Opportunity →</a></p>' +
+            '</div></div>';
+
         String body = JSON.serialize(new Map<String, Object>{
             'subject' => subject,
-            'body' => new Map<String, String>{ 'contentType' => 'Text', 'content' => notes },
+            'body' => new Map<String, String>{ 'contentType' => 'HTML', 'content' => htmlBody },
             'start' => new Map<String, String>{
                 'dateTime' => startDt.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss'),
                 'timeZone' => 'UTC'
@@ -940,6 +997,10 @@ public with sharing class M365CalendarService {
             'attendees' => new List<Map<String, Object>>{
                 new Map<String, Object>{
                     'emailAddress' => new Map<String, String>{ 'address' => scEmail },
+                    'type' => 'required'
+                },
+                new Map<String, Object>{
+                    'emailAddress' => new Map<String, String>{ 'address' => aeEmail },
                     'type' => 'required'
                 }
             }

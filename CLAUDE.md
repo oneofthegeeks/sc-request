@@ -87,6 +87,13 @@ Built with plain HTML/CSS/JS. GoTo-branded (Figtree font, #FFE900 yellow, #0d0d0
 - **Default view:** Next 5 mutual open slots; date picker for specific dates
 - **Fallback:** Manual date/time entry always available if API unavailable
 
+## Outlook Invite Body
+- Invite body is **HTML** (`contentType: "HTML"`) — renders formatted in Outlook, Teams, mobile
+- Contains same fields as the email notification: Opportunity name (linked to SFDC), Account, Primary Contact, Meeting Date & Time, Request Type, Product Line, Assigned SC, AE freeform notes, "View Opportunity" button
+- Both AE and SC are added as `required` attendees on the M365 event
+- Primary contact fetched via `OpportunityContactRole WHERE IsPrimary = true LIMIT 1` — best-effort, shows "—" if none
+- `createCalendarEvent` signature takes: scUserId, aeUserId, subject, notes, startDt, endDt, oppName, accountName, aeName, scName, requestType, productLine, primaryContact, opportunityId
+
 ## Email Template
 - HTML, GoTo brand blue (`#0070d2`) header
 - Fields: Opportunity (link), Primary Contact, Request Type, Product Line, Assigned SC, Meeting Date+Time (actual time — not "See Meeting Invite")

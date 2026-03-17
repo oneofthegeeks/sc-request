@@ -742,7 +742,7 @@ Deactivate the existing pairing before creating a new one."</span></div>
             <thead><tr><th>State</th><th>Behavior</th></tr></thead>
             <tbody>
               <tr><td>Checkbox default</td><td>Checked (opt-out model). Most requests won't have a pre-existing invite.</td></tr>
-              <tr><td>If checked on submit</td><td>M365 integration creates an Outlook calendar event for both AE and SC with meeting details and a link to the Salesforce Opportunity. SC receives an Outlook invite to accept or decline.</td></tr>
+              <tr><td>If checked on submit</td><td>M365 integration creates an Outlook calendar event for both AE and SC. The invite body matches the email notification: Opportunity name (linked), Account, Primary Contact, Meeting Date &amp; Time, Request Type, Product Line, Assigned SC, AE notes, and a "View Opportunity" button. SC receives the invite in Outlook to accept or decline.</td></tr>
               <tr><td>If unchecked</td><td>No Outlook invite sent. AE handles calendar coordination. Salesforce Event record is still created regardless.</td></tr>
             </tbody>
           </table>

@@ -174,7 +174,7 @@ After the AE selects a time slot, a checkbox is presented in the form:
 > ☑ "Send Outlook calendar invite to SC automatically"
 
 - Default state: **checked** (opt-out model — most requests won't have a pre-existing invite)
-- If checked on submit: the M365 integration creates an Outlook calendar event for both the AE and SC, with the meeting details and a link to the Salesforce Opportunity. The SC receives the invite in their Outlook inbox to accept or decline.
+- If checked on submit: the M365 integration creates an Outlook calendar event for both the AE and SC. The invite body contains the same details as the email notification: Opportunity name (linked), Account name, Primary Contact, Meeting Date & Time, Request Type, Product Line, Assigned SC, AE's freeform notes, and a "View Opportunity" button. The SC receives the invite in their Outlook inbox to accept or decline.
 - If unchecked: no Outlook invite is sent. The AE is responsible for calendar coordination. The Salesforce Event record is still created regardless.
 - This write action requires M365 OAuth scope: `Calendars.ReadWrite` (in addition to `Calendars.Read` for availability checks)
 
