@@ -157,6 +157,31 @@
               </div>
             </div>
           </div>
+
+          <h2 style="font-size:20px;font-weight:700;margin-top:48px;margin-bottom:16px;letter-spacing:-0.3px">Inside the Modal — 3 Steps</h2>
+          <div class="cards">
+            <div class="card">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--goto-yellow);color:var(--goto-black);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">1</div>
+                <h3 style="margin:0">SC &amp; Meeting Time</h3>
+              </div>
+              <p>SC pre-filled from AE's assignment (override available). Duration selector: 30 min / 1 hr / 90 min. Calendar panel shows next 5 mutual open slots. Date picker for specific dates. AE selects a slot.</p>
+            </div>
+            <div class="card">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--goto-yellow);color:var(--goto-black);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">2</div>
+                <h3 style="margin:0">Request Details</h3>
+              </div>
+              <p>Request Type dropdown (14 options). Product Line dropdown (17 options). Freeform notes: <em>"What does the customer have today, what are they trying to solve, and what should the demo include?"</em></p>
+            </div>
+            <div class="card">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--goto-yellow);color:var(--goto-black);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">3</div>
+                <h3 style="margin:0">Review &amp; Submit</h3>
+              </div>
+              <p>Full summary of all selections. Checkbox: <em>"Send Outlook calendar invite to SC automatically"</em> — checked by default. One click submits everything.</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -213,7 +238,7 @@
               <tr>
                 <td><code>SC_Request__c</code></td>
                 <td><span class="new">New</span></td>
-                <td>Stores every SC request for reporting, history display on the Opportunity, and audit trail</td>
+                <td>Stores every SC request for reporting, history display on the Opportunity, and audit trail. Key fields: Request Type, Product Line, Meeting Date, Status, Submitted By, Request Notes.</td>
               </tr>
               <tr>
                 <td><code>SC_Pairing__c</code></td>
@@ -263,8 +288,16 @@
                   <div class="email-field-value link">POC - AIOPT →</div>
                 </div>
                 <div>
+                  <div class="email-field-label">Account</div>
+                  <div class="email-field-value">AIOPT Inc.</div>
+                </div>
+                <div>
                   <div class="email-field-label">Primary Contact</div>
                   <div class="email-field-value">Robert W. Sorensen</div>
+                </div>
+                <div>
+                  <div class="email-field-label">Meeting Date &amp; Time</div>
+                  <div class="email-field-value date">March 20, 2026 at 8:00 AM</div>
                 </div>
                 <div>
                   <div class="email-field-label">Request Type</div>
@@ -278,13 +311,9 @@
                   <div class="email-field-label">Assigned SC</div>
                   <div class="email-field-value">Joe Varvel</div>
                 </div>
-                <div>
-                  <div class="email-field-label">Meeting Date &amp; Time</div>
-                  <div class="email-field-value date">March 20, 2026 at 8:00 AM</div>
-                </div>
               </div>
               <div class="email-notes">
-                <div class="email-notes-label">What does the customer want to achieve / solve?</div>
+                <div class="email-notes-label">What does the customer have today, what are they trying to solve, and what should the demo include?</div>
                 <div class="email-notes-body">Customer is evaluating GoToConnect for their 250-seat contact center. Looking for a demo focused on the supervisor dashboard and real-time reporting capabilities.</div>
               </div>
               <div class="email-actions">
@@ -372,6 +401,46 @@
           <div class="rec-block">
             <div class="rec-block-label">Recommendation: Option A — Salesforce Native</div>
             <div class="rec-block-body">AEs already live in Salesforce. Keeping everything native means no context-switching, no extra systems to maintain, and no new IT approvals. The higher build complexity is a one-time cost — the long-term simplicity is worth it.</div>
+          </div>
+
+          <h2 style="font-size:20px;font-weight:700;margin-top:48px;margin-bottom:8px;letter-spacing:-0.3px">How Option C Works — Slack Flow</h2>
+          <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">For comparison: same Salesforce writes, different front-end. Triggered with <code>/request-sc</code> in any Slack channel or DM.</p>
+          <div class="steps">
+            <div class="step">
+              <div class="step-num" style="background:#f4f6f9;color:var(--text-muted)">1</div>
+              <div class="step-body">
+                <h3>AE types <code>/request-sc</code> in Slack</h3>
+                <p>Works from any channel or DM. Opens a multi-step Slack modal.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="background:#f4f6f9;color:var(--text-muted)">2</div>
+              <div class="step-body">
+                <h3>AE searches for and selects the Opportunity</h3>
+                <p>Type-ahead lookup against Salesforce Opportunities by name — one extra step vs. Option A where the Opportunity is already open.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="background:#f4f6f9;color:var(--text-muted)">3</div>
+              <div class="step-body">
+                <h3>SC auto-populated, override available</h3>
+                <p>Same pairing logic as Option A. Request Type, Product Line, and notes entered via Slack dropdowns and text fields.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="background:#f4f6f9;color:var(--text-muted)">4</div>
+              <div class="step-body">
+                <h3>Submit → available slots posted as Slack buttons</h3>
+                <p>After modal submit, the bot queries M365 and posts the next available time slots as interactive message buttons in a follow-up DM.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="background:#f4f6f9;color:var(--text-muted)">5</div>
+              <div class="step-body">
+                <h3>AE taps a slot → all Salesforce writes fire</h3>
+                <p>Same objects created as Option A: SC_Request__c, Event, OpportunityTeamMember, Opportunity field updates, email notifications.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -821,6 +890,7 @@ Deactivate the existing pairing before creating a new one."</span></div>
             <li class="resolved"><span class="q-icon">✅</span><div class="q-body"><strong>Email template format</strong><span>HTML template with GoTo brand header, 2-column grid, 3 CTA buttons, recipient footer.</span></div></li>
             <li class="resolved"><span class="q-icon">✅</span><div class="q-body"><strong>Default meeting duration</strong><span>1 hour confirmed.</span></div></li>
             <li class="resolved"><span class="q-icon">✅</span><div class="q-body"><strong>Outlook invite model</strong><span>Opt-out (checked by default). AE unchecks if call already scheduled.</span></div></li>
+            <li class="resolved"><span class="q-icon">✅</span><div class="q-body"><strong>Outlook invite body content</strong><span>HTML body matching the email notification — Opportunity (linked), Account, Primary Contact, Meeting Date &amp; Time, Request Type, Product Line, Assigned SC, AE notes, and a "View Opportunity" button. Both AE and SC added as required attendees.</span></div></li>
           </ul>
         </div>
       </section>
